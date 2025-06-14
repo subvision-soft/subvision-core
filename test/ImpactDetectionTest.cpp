@@ -43,7 +43,7 @@ protected:
         std::vector<cv::Mat> splitResult;
         cv::split(binaryExpectedMask, splitResult);
         cv::Mat hsvSimulate;
-        cv::merge(std::vector<cv::Mat>{splitResult[0], splitResult[0], splitResult[0]}, hsvSimulate);
+        cv::merge(std::vector{splitResult[0], splitResult[0], splitResult[0]}, hsvSimulate);
         cv::Mat bgrSimulate;
         cv::cvtColor(hsvSimulate, bgrSimulate, cv::COLOR_HSV2BGR);
         std::vector<cv::Point2f> realCoordinates = subvision::getImpactsCoordinates(bgrSimulate);

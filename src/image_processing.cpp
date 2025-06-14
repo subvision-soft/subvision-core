@@ -58,7 +58,6 @@ namespace subvision {
         cv::Mat hsv, mask;
         cvtColor(image, hsv, cv::COLOR_BGR2HSV);
 
-        // Utiliser directement le canal de saturation sans split
         std::vector<cv::Mat> channels;
         split(hsv, channels);
         cv::Mat &saturation = channels[1];
@@ -71,13 +70,13 @@ namespace subvision {
 
         cv::inRange(saturation, cv::Scalar(minVal), cv::Scalar(maxVal), mask);
 
-        // Utiliser un kernel plus petit pour accélérer l'opération morphologique
-        static cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
-        cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), 1, cv::BORDER_REPLICATE);
+        cv::erode(mask , mask, cv::Mat(), cv::Point(-1, -1), 2);
+        cv::dilate(mask, mask, cv::Mat(), cv::Point(-1, -1), 2);
 
-        cv::threshold(mask, mask, 127, 255, cv::THRESH_BINARY);
 
-        // Réduire le nombre de points pour fitEllipse
+
+        threshold(mask, mask, 127, 255, cv::THRESH_BINARY);
+
         std::vector<std::vector<cv::Point>> contours;
         cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
@@ -134,7 +133,8 @@ namespace subvision {
 
         cv::Mat kernel = getStructuringElement(
             cv::MORPH_RECT, cv::Size(PICTURE_WIDTH_SHEET_DETECTION / 200, PICTURE_HEIGHT_SHEET_DETECTION / 200));
-        morphologyEx(mask, mask, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), 1);
+        cv::erode(mask, mask, cv::Mat(), cv::Point(-1, -1), 2);
+        cv::dilate(mask, mask, cv::Mat(), cv::Point(-1, -1), 2);
         threshold(mask, mask, 127, 255, cv::THRESH_BINARY);
 
         return mask;
@@ -142,37 +142,43 @@ namespace subvision {
 
     Ellipse retrieveEllipse(const cv::Mat &image) {
         std::vector<std::vector<cv::Point>> contours;
-        findContours(image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+        std::vector<cv::Vec4i> hierarchy;
+        findContours(image, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
         if (contours.empty()) {
             return std::make_tuple(cv::Point2f(0, 0), cv::Size2f(0, 0), 0.0f);
         }
 
-        // Trouver le plus grand contour
+        // Find the biggest contour
         auto biggestContour = *std::max_element(contours.begin(), contours.end(),
-            [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b) {
-                return contourArea(a) < contourArea(b);
-            });
+                                          [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b) {
+                                              return contourArea(a) < contourArea(b);
+                                          });
 
-        // Utiliser directement le contour pour fitEllipse si possible
-        if (biggestContour.size() >= 5) {
-            cv::RotatedRect rotatedRect = fitEllipse(biggestContour);
-            return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
-        }
-
-        // Sinon, extraire les bords pour tenter un fitEllipse
-        cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC1);
+        cv::Mat mask = cv::Mat::zeros(image.size(), image.type());
         drawContours(mask, std::vector<std::vector<cv::Point>>{biggestContour}, -1, cv::Scalar(255), -1);
 
-        cv::Mat grad;
-        cv::Sobel(mask, grad, CV_8U, 1, 1);
-        cv::threshold(grad, grad, 0, 255, cv::THRESH_BINARY);
+        // Compute edges
+        cv::Mat magX, magY, mag;
+        Sobel(mask, magX, CV_32F, 1, 0);
+        Sobel(mask, magY, CV_32F, 0, 1);
 
-        std::vector<cv::Point> edgePoints;
-        cv::findNonZero(grad, edgePoints);
+        cv::Mat absMagX, absMagY;
+        convertScaleAbs(magX, absMagX);
+        convertScaleAbs(magY, absMagY);
 
-        if (edgePoints.size() >= 5) {
-            cv::RotatedRect rotatedRect = fitEllipse(edgePoints);
+        addWeighted(absMagX, 1.0, absMagY, 1.0, 0, mag);
+
+        cv::Mat edgeMask;
+        threshold(mag, edgeMask, 0, 255, cv::THRESH_BINARY);
+
+        // Extract edge points
+        std::vector<cv::Point> ptsEdges;
+        findNonZero(edgeMask, ptsEdges);
+
+        // Fit ellipse to edges
+        if (ptsEdges.size() >= 5) {
+            cv::RotatedRect rotatedRect = fitEllipse(ptsEdges);
             return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
         }
 

@@ -34,8 +34,9 @@ namespace subvision {
         bitwise_and(valueMask, notImpacts, valueMask);
 
         cv::Mat close;
-        morphologyEx(valueMask, close, cv::MORPH_CLOSE, ROUND_KERNEL);
-        morphologyEx(close, close, cv::MORPH_OPEN, ROUND_KERNEL);
+        cv::erode(valueMask, close, cv::Mat(), cv::Point(-1, -1), 10);
+        cv::dilate(close, close, cv::Mat(), cv::Point(-1, -1), 20);
+        cv::erode(close, close, cv::Mat(), cv::Point(-1, -1), 10);
 
         Ellipse ellipse = retrieveEllipse(close);
 
