@@ -3,50 +3,66 @@
 #include "../include/utils.h"
 
 namespace subvision {
-
-    std::vector<cv::Point> getBiggestValidContour(const std::vector<std::vector<cv::Point>> &contours) {
+    std::vector<cv::Point> getBiggestValidContour(const std::vector<std::vector<cv::Point> > &contours) {
         std::vector<cv::Point> biggestContour;
         double biggestArea = 0;
+        double totalArea = PICTURE_WIDTH_SHEET_DETECTION * PICTURE_HEIGHT_SHEET_DETECTION;
 
         for (const auto &contour: contours) {
-            std::vector<cv::Point> approx;
-            double epsilon = 0.01 * arcLength(contour, true);
-            approxPolyDP(contour, approx, epsilon, true);
-
-            if (approx.size() != 4 || contourArea(approx) < biggestArea) {
+            // Éviter d'allouer approx si le contour est trop petit
+            if (contour.size() < 4)
                 continue;
-            }
 
-            // Check angles
+            double epsilon = 0.01 * cv::arcLength(contour, true);
+            std::vector<cv::Point> approx;
+            cv::approxPolyDP(contour, approx, epsilon, true);
+
+            if (approx.size() != 4)
+                continue;
+
+            double area = cv::contourArea(approx);
+            if (area < biggestArea)
+                continue;
+
+            // Vérifier la proportion d'aire avant de calculer les angles
+            double areaRatio = area / totalArea;
+            if (areaRatio < 0.1 || areaRatio > 0.9)
+                continue;
+
+            // Vérifier les angles (éviter les allocations inutiles)
             bool validAngles = true;
-            for (int i = 0; i < 4; i++) {
-                cv::Point p1 = approx[i];
-                cv::Point p2 = approx[(i + 1) % 4];
-                cv::Point p3 = approx[(i + 2) % 4];
+            for (int i = 0; i < 4; ++i) {
+                const cv::Point &p1 = approx[i];
+                const cv::Point &p2 = approx[(i + 1) % 4];
+                const cv::Point &p3 = approx[(i + 2) % 4];
 
-                float dot = (p1.x - p2.x) * (p3.x - p2.x) + (p1.y - p2.y) * (p3.y - p2.y);
-                float mag1 = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
-                float mag2 = sqrt(pow(p3.x - p2.x, 2) + pow(p3.y - p2.y, 2));
-                float angle = acos(clamp(dot / (mag1 * mag2),-1.0f,1.0f)) * 180.0f / static_cast<float>(CV_PI);
+                float dx1 = static_cast<float>(p1.x - p2.x);
+                float dy1 = static_cast<float>(p1.y - p2.y);
+                float dx2 = static_cast<float>(p3.x - p2.x);
+                float dy2 = static_cast<float>(p3.y - p2.y);
 
+                float dot = dx1 * dx2 + dy1 * dy2;
+                float mag1 = std::hypot(dx1, dy1);
+                float mag2 = std::hypot(dx2, dy2);
+
+                // Éviter la division par zéro
+                if (mag1 < 1e-6f || mag2 < 1e-6f) {
+                    validAngles = false;
+                    break;
+                }
+
+                float angle = std::acos(clamp(dot / (mag1 * mag2), -1.0f, 1.0f)) * 180.0f / static_cast<float>(
+                                  CV_PI);
                 if (angle < 70.0f || angle > 110.0f) {
                     validAngles = false;
                     break;
                 }
             }
 
-            if (!validAngles) {
+            if (!validAngles)
                 continue;
-            }
 
-            double area = contourArea(approx);
-            double totalArea = PICTURE_WIDTH_SHEET_DETECTION * PICTURE_HEIGHT_SHEET_DETECTION;
-
-            if (area / totalArea < 0.1 || area / totalArea > 0.9) {
-                continue;
-            }
-
-            biggestContour = approx;
+            biggestContour = std::move(approx);
             biggestArea = area;
         }
 
@@ -70,14 +86,13 @@ namespace subvision {
 
         cv::inRange(saturation, cv::Scalar(minVal), cv::Scalar(maxVal), mask);
 
-        cv::erode(mask , mask, cv::Mat(), cv::Point(-1, -1), 2);
+        cv::erode(mask, mask, cv::Mat(), cv::Point(-1, -1), 2);
         cv::dilate(mask, mask, cv::Mat(), cv::Point(-1, -1), 2);
-
 
 
         threshold(mask, mask, 127, 255, cv::THRESH_BINARY);
 
-        std::vector<std::vector<cv::Point>> contours;
+        std::vector<std::vector<cv::Point> > contours;
         cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
         cv::Mat result = cv::Mat::zeros(mask.size(), mask.type());
@@ -98,9 +113,10 @@ namespace subvision {
     }
 
     std::vector<cv::Point2f> getImpactsCoordinates(const cv::Mat &image) {
+        auto start = std::chrono::high_resolution_clock::now();
         cv::Mat mask = getImpactsMask(image);
 
-        std::vector<std::vector<cv::Point>> contours;
+        std::vector<std::vector<cv::Point> > contours;
         std::vector<cv::Vec4i> hierarchy;
         findContours(mask, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
@@ -113,7 +129,9 @@ namespace subvision {
                 }
             }
         }
-
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Temps écoulé pour getImpactsCoordinates: " << elapsed.count() << " secondes" << std::endl;
         return centers;
     }
 
@@ -141,47 +159,52 @@ namespace subvision {
     }
 
     Ellipse retrieveEllipse(const cv::Mat &image) {
-        std::vector<std::vector<cv::Point>> contours;
-        std::vector<cv::Vec4i> hierarchy;
-        findContours(image, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+        auto start = std::chrono::high_resolution_clock::now();
+        std::vector<std::vector<cv::Point> > contours;
+        findContours(image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
         if (contours.empty()) {
             return std::make_tuple(cv::Point2f(0, 0), cv::Size2f(0, 0), 0.0f);
         }
 
-        // Find the biggest contour
-        auto biggestContour = *std::max_element(contours.begin(), contours.end(),
-                                          [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b) {
-                                              return contourArea(a) < contourArea(b);
-                                          });
+        // Trouver le plus grand contour
+        size_t maxIdx = 0;
+        double maxArea = 0.0;
+        for (size_t i = 0; i < contours.size(); ++i) {
+            double area = contourArea(contours[i]);
+            if (area > maxArea) {
+                maxArea = area;
+                maxIdx = i;
+            }
+        }
+        const std::vector<cv::Point> &biggestContour = contours[maxIdx];
 
-        cv::Mat mask = cv::Mat::zeros(image.size(), image.type());
-        drawContours(mask, std::vector<std::vector<cv::Point>>{biggestContour}, -1, cv::Scalar(255), -1);
-
-        // Compute edges
-        cv::Mat magX, magY, mag;
-        Sobel(mask, magX, CV_32F, 1, 0);
-        Sobel(mask, magY, CV_32F, 0, 1);
-
-        cv::Mat absMagX, absMagY;
-        convertScaleAbs(magX, absMagX);
-        convertScaleAbs(magY, absMagY);
-
-        addWeighted(absMagX, 1.0, absMagY, 1.0, 0, mag);
-
-        cv::Mat edgeMask;
-        threshold(mag, edgeMask, 0, 255, cv::THRESH_BINARY);
-
-        // Extract edge points
-        std::vector<cv::Point> ptsEdges;
-        findNonZero(edgeMask, ptsEdges);
-
-        // Fit ellipse to edges
-        if (ptsEdges.size() >= 5) {
-            cv::RotatedRect rotatedRect = fitEllipse(ptsEdges);
+        // Utiliser directement le contour pour le fitEllipse si possible
+        if (biggestContour.size() >= 5) {
+            cv::RotatedRect rotatedRect = fitEllipse(biggestContour);
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+            std::cout << "Temps écoulé pour retrieveEllipse: " << elapsed.count() << " secondes" << std::endl;
             return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
         }
 
+        // Sinon, fallback sur l'ancienne méthode (rare)
+        cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC1);
+        drawContours(mask, std::vector<std::vector<cv::Point> >{biggestContour}, -1, cv::Scalar(255), -1);
+
+        std::vector<cv::Point> ptsEdges;
+        findNonZero(mask, ptsEdges);
+
+        if (ptsEdges.size() >= 5) {
+            cv::RotatedRect rotatedRect = fitEllipse(ptsEdges);
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+            std::cout << "Temps écoulé pour retrieveEllipse: " << elapsed.count() << " secondes" << std::endl;
+            return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Temps écoulé pour retrieveEllipse: " << elapsed.count() << " secondes" << std::endl;
         return std::make_tuple(cv::Point2f(0, 0), cv::Size2f(0, 0), 0.0f);
     }
 }

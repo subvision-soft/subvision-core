@@ -6,33 +6,34 @@
 namespace subvision {
 
     Ellipse getTargetEllipse(const cv::Mat &mat) {
-        cv::Mat circle = cv::Mat::zeros(mat.cols, mat.rows, CV_8UC1);
-        circle(cv::Rect(0, 0, mat.cols, mat.rows)) = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Créer un masque circulaire centré
+        cv::Mat circle = cv::Mat::zeros(mat.rows, mat.cols, CV_8UC1);
         cv::circle(circle, cv::Point(mat.cols / 2, mat.rows / 2), static_cast<int>(mat.cols / 2.2), cv::Scalar(255), -1);
 
+        // Conversion en espace de couleur XYZ et extraction du canal Z
         cv::Mat xyz;
-        cvtColor(mat.clone(), xyz, cv::COLOR_BGR2XYZ);
-
+        cvtColor(mat, xyz, cv::COLOR_BGR2XYZ);
         std::vector<cv::Mat> xyzChannels;
         split(xyz, xyzChannels);
         cv::Mat value = xyzChannels[2];
 
+        // Inversion et seuillage adaptatif
         bitwise_not(value, value);
-
         double minVal, maxVal;
         minMaxLoc(value, &minVal, &maxVal);
         minVal = maxVal - (maxVal - minVal) / 1.5;
-
         cv::Mat valueMask;
         inRange(value, cv::Scalar(minVal), cv::Scalar(maxVal), valueMask);
 
-        // bitwise_and(valueMask, circle, valueMask);
-
+        // Suppression des impacts détectés
         cv::Mat impacts = getImpactsMask(mat);
         cv::Mat notImpacts;
         bitwise_not(impacts, notImpacts);
         bitwise_and(valueMask, notImpacts, valueMask);
 
+        // Morphologie pour fermer les trous
         cv::Mat close;
         cv::erode(valueMask, close, cv::Mat(), cv::Point(-1, -1), 10);
         cv::dilate(close, close, cv::Mat(), cv::Point(-1, -1), 20);
@@ -40,15 +41,21 @@ namespace subvision {
 
         Ellipse ellipse = retrieveEllipse(close);
 
+        auto ellipseIsValid = [](const Ellipse& e) {
+            float w = std::get<1>(e).width;
+            float h = std::get<1>(e).height;
+            return w >= h * 0.7f && w <= h * 1.3f;
+        };
+
         try {
+            // Générer un masque d'ellipse et fusionner avec le masque détecté
             cv::Mat empty = cv::Mat::zeros(mat.size(), mat.type());
             cv::Point center = tupleIntCast(std::get<0>(ellipse));
-            cv::Size size = cv::Size(static_cast<int>(std::get<1>(ellipse).width), static_cast<int>(std::get<1>(ellipse).height));
+            cv::Size size(static_cast<int>(std::get<1>(ellipse).width), static_cast<int>(std::get<1>(ellipse).height));
             float angle = std::get<2>(ellipse);
 
             std::vector<cv::Point> ellipsePoints;
-            ellipse2Poly(center, cv::Size2f(size.width / 2, size.height / 2), static_cast<int>(angle), 0, 360, 1,
-                        ellipsePoints);
+            ellipse2Poly(center, cv::Size2f(size.width / 2, size.height / 2), static_cast<int>(angle), 0, 360, 1, ellipsePoints);
             fillConvexPoly(empty, ellipsePoints, cv::Scalar(255, 255, 255));
 
             cv::Mat emptyGray;
@@ -60,19 +67,18 @@ namespace subvision {
 
             ellipse = retrieveEllipse(close);
 
-            if (std::get<1>(ellipse).width < std::get<1>(ellipse).height * 0.7 ||
-                std::get<1>(ellipse).width > std::get<1>(ellipse).height * 1.3) {
+            if (!ellipseIsValid(ellipse)) {
                 throw std::runtime_error("Problem during visual detection 1");
             }
         } catch (const std::exception &) {
+            // Si l'ellipse n'est pas valide, restreindre le masque et réessayer
             cv::Mat empty = cv::Mat::zeros(mat.size(), mat.type());
             cv::Point center = tupleIntCast(std::get<0>(ellipse));
-            cv::Size size = cv::Size(static_cast<int>(std::get<1>(ellipse).width), static_cast<int>(std::get<1>(ellipse).height));
+            cv::Size size(static_cast<int>(std::get<1>(ellipse).width), static_cast<int>(std::get<1>(ellipse).height));
             float angle = std::get<2>(ellipse);
 
             std::vector<cv::Point> ellipsePoints;
-            ellipse2Poly(center, cv::Size2f(size.width / 2, size.height / 2), static_cast<int>(angle), 0, 360, 1,
-                        ellipsePoints);
+            ellipse2Poly(center, cv::Size2f(size.width / 2, size.height / 2), static_cast<int>(angle), 0, 360, 1, ellipsePoints);
             fillConvexPoly(empty, ellipsePoints, cv::Scalar(255, 255, 255));
 
             cv::Mat emptyGray;
@@ -80,20 +86,16 @@ namespace subvision {
 
             bitwise_and(close, emptyGray, close);
 
-            cv::Mat matCopy = mat.clone();
             ellipse = retrieveEllipse(close);
 
-            ellipse2Poly(tupleIntCast(std::get<0>(ellipse)),
-                        cv::Size2f(std::get<1>(ellipse).width / 2, std::get<1>(ellipse).height / 2),
-                        static_cast<int>(std::get<2>(ellipse)), 0, 360, 1, ellipsePoints);
-            polylines(matCopy, ellipsePoints, true, cv::Scalar(0, 255, 0), 1);
-
-            if (std::get<1>(ellipse).width < std::get<1>(ellipse).height * 0.7 ||
-                std::get<1>(ellipse).width > std::get<1>(ellipse).height * 1.3) {
+            if (!ellipseIsValid(ellipse)) {
                 throw std::runtime_error("Problem during visual detection");
             }
         }
 
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Temps écoulé pour getTargetEllipse: " << elapsed.count() << " secondes" << std::endl;
         return ellipse;
     }
 

@@ -9,6 +9,7 @@ namespace subvision {
 
     std::vector<Impact> drawAndGetImpactsPoints(const std::vector<cv::Point2f> &impacts, cv::Mat &sheetMat,
                                               const std::map<int, Ellipse> &targetsEllipsis) {
+        auto start = std::chrono::high_resolution_clock::now();
         std::vector<Impact> points;
         cv::Scalar blue(255, 0, 0), black(0, 0, 0), orange(0, 165, 255), white(255, 255, 255);
         int perpendicularLineLength = 25;
@@ -56,10 +57,14 @@ namespace subvision {
             points.push_back(Impact(realDistance, score, closestZone, toDegrees(radAngle) + 180.0f, 1));
         }
 
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Temps écoulé pour drawAndGetImpactsPoints: " << elapsed.count() << " secondes" << std::endl;
         return points;
     }
 
     bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results) {
+
         // 1. Extract the actual Base64 data from the input string
         // 3. Use cv::imdecode to convert bytes to a Mat
         cv::Mat image = imageToProcess.clone();
