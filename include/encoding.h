@@ -1,5 +1,5 @@
-#ifndef SUBVISION_CV_ENCODING_H
-#define SUBVISION_CV_ENCODING_H
+#ifndef SUBVISION_CORE_ENCODING_H
+#define SUBVISION_CORE_ENCODING_H
 
 #include <string>
 #include <vector>
@@ -18,4 +18,4 @@ namespace subvision {
     std::string base64_encode(const unsigned char *bytes_to_encode, unsigned int in_len);
 }
 
-#endif //SUBVISION_CV_ENCODING_H
+#endif //SUBVISION_CORE_ENCODING_H

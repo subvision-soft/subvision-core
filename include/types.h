@@ -1,5 +1,5 @@
-#ifndef SUBVISION_CV_TYPES_H
-#define SUBVISION_CV_TYPES_H
+#ifndef SUBVISION_CORE_TYPES_H
+#define SUBVISION_CORE_TYPES_H
 
 #include <opencv2/opencv.hpp>
 #include <tuple>
@@ -24,4 +24,4 @@ namespace subvision {
     };
 }
 
-#endif //SUBVISION_CV_TYPES_H
+#endif //SUBVISION_CORE_TYPES_H

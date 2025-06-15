@@ -1,5 +1,5 @@
-#ifndef SUBVISION_CV_H
-#define SUBVISION_CV_H
+#ifndef SUBVISION_CORE_H
+#define SUBVISION_CORE_H
 
 #include "constants.h"
 #include "types.h"
@@ -10,4 +10,4 @@
 #include "sheet_detection.h"
 #include "encoding.h"
 
-#endif //SUBVISION_CV_H
+#endif //SUBVISION_CORE_H

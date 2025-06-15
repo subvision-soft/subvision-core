@@ -63,7 +63,7 @@ Puis ouvrez votre navigateur à l'adresse http://localhost:8000 pour tester l'ap
 
 ```javascript
 // Importation du module WebAssembly
-import SubvisionCVModule from './subvision_wasm.js';
+import SubvisionCVModule from './subvision_core.js';
 
 // Initialisation du module
 SubvisionCVModule().then(subvisionCV => {

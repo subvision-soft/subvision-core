@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(subvision_cv)
+project(subvision_core)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -34,7 +34,7 @@ add_library(subvision_lib STATIC ${LIB_SOURCES})
 target_include_directories(subvision_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Définir l'exécutable principal
-add_executable(subvision_cv main.cpp)
+add_executable(subvision_core main.cpp)
 
 set(OpenCV_LIBS opencv_core
                 opencv_imgproc
@@ -47,7 +47,7 @@ set(OpenCV_LIBS opencv_core
                 opencv_dnn)
 
 # Lier la bibliothèque à l'exécutable principal
-target_link_libraries(subvision_cv subvision_lib ${OpenCV_LIBS})
+target_link_libraries(subvision_core subvision_lib ${OpenCV_LIBS})
 
 # Création d'un répertoire resources si nécessaire
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources)

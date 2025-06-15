@@ -1,5 +1,5 @@
-#ifndef SUBVISION_CV_IMPACT_DETECTION_H
-#define SUBVISION_CV_IMPACT_DETECTION_H
+#ifndef SUBVISION_CORE_IMPACT_DETECTION_H
+#define SUBVISION_CORE_IMPACT_DETECTION_H
 
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -14,4 +14,4 @@ namespace subvision {
     bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results);
 }
 
-#endif //SUBVISION_CV_IMPACT_DETECTION_H
+#endif //SUBVISION_CORE_IMPACT_DETECTION_H

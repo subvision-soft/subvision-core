@@ -1,5 +1,5 @@
-#ifndef SUBVISION_CV_TARGET_DETECTION_H
-#define SUBVISION_CV_TARGET_DETECTION_H
+#ifndef SUBVISION_CORE_TARGET_DETECTION_H
+#define SUBVISION_CORE_TARGET_DETECTION_H
 
 #include <opencv2/opencv.hpp>
 #include <map>
@@ -24,4 +24,4 @@ namespace subvision {
     void drawDetectedSheet(cv::Mat &sheetMat);
 }
 
-#endif //SUBVISION_CV_TARGET_DETECTION_H
+#endif //SUBVISION_CORE_TARGET_DETECTION_H

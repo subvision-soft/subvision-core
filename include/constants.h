@@ -1,5 +1,5 @@
-#ifndef SUBVISION_CV_CONSTANTS_H
-#define SUBVISION_CV_CONSTANTS_H
+#ifndef SUBVISION_CORE_CONSTANTS_H
+#define SUBVISION_CORE_CONSTANTS_H
 
 #include <opencv2/opencv.hpp>
 
@@ -17,4 +17,4 @@ namespace subvision {
     const cv::Mat ROUND_KERNEL = cv::getStructuringElement(cv::MORPH_ELLIPSE, KERNEL_SIZE);
 }
 
-#endif //SUBVISION_CV_CONSTANTS_H
+#endif //SUBVISION_CORE_CONSTANTS_H

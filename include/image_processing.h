@@ -1,5 +1,5 @@
-#ifndef SUBVISION_CV_IMAGE_PROCESSING_H
-#define SUBVISION_CV_IMAGE_PROCESSING_H
+#ifndef SUBVISION_CORE_IMAGE_PROCESSING_H
+#define SUBVISION_CORE_IMAGE_PROCESSING_H
 
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -22,4 +22,4 @@ namespace subvision {
     Ellipse retrieveEllipse(const cv::Mat &image);
 }
 
-#endif //SUBVISION_CV_IMAGE_PROCESSING_H
+#endif //SUBVISION_CORE_IMAGE_PROCESSING_H
