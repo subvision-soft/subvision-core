@@ -128,10 +128,13 @@
                 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
                 const startTime = performance.now();
-                const results = subvisionCV.processTargetImage(imgData.width, imgData.height, imgData.data);
+                const coordinates = subvisionCV.getSheetCoordinates(imgData.width, imgData.height, imgData.data);
                 const endTime = performance.now();
                 const time = (endTime - startTime);
                 console.log(`Temps d'exécution : ${time.toFixed(2)} ms`);
+                console.log(coordinates);
+                const results = subvisionCV.processTargetImage(imgData.width, imgData.height, imgData.data);
+
 
                 // Affichage de l'image résultat
 

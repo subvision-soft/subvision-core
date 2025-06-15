@@ -48,7 +48,7 @@ namespace subvision {
     std::vector<cv::Point2f> coordinatesToPercentage(const std::vector<cv::Point> &coordinates, int width, int height);
 
     // Convertir des pourcentages en coordonnées
-    std::vector<cv::Point> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates, int width, int height);
+    std::vector<cv::Point2f> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates, int width, int height);
 
     // Créer un vecteur d'impacts vide
     std::vector<Impact> createImpactVector();

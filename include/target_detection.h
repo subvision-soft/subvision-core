@@ -20,6 +20,8 @@ namespace subvision {
 
     // Dessiner les cibles sur l'image
     void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat);
+
+    void drawDetectedSheet(cv::Mat &sheetMat);
 }
 
 #endif //SUBVISION_CV_TARGET_DETECTION_H

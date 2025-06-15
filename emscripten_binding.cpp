@@ -2,6 +2,7 @@
 #include <emscripten/val.h>
 #include "include/types.h"
 #include "include/impact_detection.h"
+#include "include/sheet_detection.h"
 
 using namespace emscripten;
 
@@ -31,23 +32,46 @@ struct JSImpactResults {
     std::vector<JSImpact> impacts;
 };
 
+template<typename T>
+std::vector<cv::Point2f> getSheetCoordinates(int width, int height, const val& typedArray) {
+    std::cout << "Start processing getSheetCoordinates with width: " << width << ", height: " << height << std::endl;
+    std::vector<T> vec = convertJSArrayToNumberVector<T>(typedArray);
+    std::cout << "Vector size: " << vec.size() << std::endl;
+    cv::Mat mat(height, width, CV_8UC4, vec.data());
+    cv::cvtColor(mat, mat, cv::COLOR_RGBA2BGR);
+
+    std::cout << "Processing getSheetCoordinates with width: " << width << ", height: " << height << std::endl;
+    return subvision::getSheetCoordinates(mat);
+}
+
+
 // Fonction wrapper pour retrieveImpacts
 template<typename T>
 JSImpactResults processTargetImage(int width, int height, const val& typedArray) {
     subvision::ImpactResults results;
-    std::vector<T> vec = vecFromJSArray<T>(typedArray);
-    cv::Mat mat(width,height, CV_8UC4, vec.data());
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<T> vec = convertJSArrayToNumberVector<T>(typedArray);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    std::cout << "Temps écoulé pour vecFromJSArray: " << elapsed.count() << " secondes" << std::endl;
+    cv::Mat mat(height,width, CV_8UC4, vec.data());
+    cv::cvtColor(mat, mat, cv::COLOR_RGBA2BGR);
+
     bool success = subvision::retrieveImpacts(mat, results);
 
     JSImpactResults jsResults;
     if (success) {
-        jsResults.annotatedImage = results.annotatedImage;
+        auto annotated_image = results.annotatedImage;
+        cv::cvtColor(annotated_image, annotated_image, cv::COLOR_BGR2RGBA);
+        jsResults.annotatedImage = annotated_image;
 
         // Convertir les impacts en format JS
         for (const auto& impact : results.impacts) {
             jsResults.impacts.push_back(JSImpact::fromImpact(impact));
         }
     }
+
 
     return jsResults;
 }
@@ -61,6 +85,12 @@ val matData(const cv::Mat& mat)
 // Définition des liaisons Emscripten
 EMSCRIPTEN_BINDINGS(subvision_module) {
     register_vector<uchar>("vector_uchar");
+    register_vector<cv::Point2f>("vector_point2f");
+    class_<cv::Point2f>("Point2f")
+        .constructor<float, float>()
+        .property("x", &cv::Point2f::x)
+        .property("y", &cv::Point2f::y);
+
     class_<cv::Mat>("Mat")
         .property("rows", &cv::Mat::rows)
         .property("columns", &cv::Mat::cols)
@@ -80,4 +110,5 @@ EMSCRIPTEN_BINDINGS(subvision_module) {
         .field("impacts", &JSImpactResults::impacts);
 
     function("processTargetImage", &processTargetImage<unsigned char>);
+    function("getSheetCoordinates", &getSheetCoordinates<unsigned char>);
 }

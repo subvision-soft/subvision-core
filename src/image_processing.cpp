@@ -4,11 +4,13 @@
 
 namespace subvision {
     std::vector<cv::Point> getBiggestValidContour(const std::vector<std::vector<cv::Point> > &contours) {
+        std::cout << "Start processing getBiggestValidContour with " << contours.size() << " contours" << std::endl;
         std::vector<cv::Point> biggestContour;
         double biggestArea = 0;
         double totalArea = PICTURE_WIDTH_SHEET_DETECTION * PICTURE_HEIGHT_SHEET_DETECTION;
 
         for (const auto &contour: contours) {
+            std::cout <<  "Processing contour with size: " << contour.size() << std::endl;
             // Éviter d'allouer approx si le contour est trop petit
             if (contour.size() < 4)
                 continue;
@@ -65,6 +67,8 @@ namespace subvision {
             biggestContour = std::move(approx);
             biggestArea = area;
         }
+
+        std::cout << "Biggest contour found with size: " << biggestContour.size() << std::endl;
 
         return biggestContour;
     }

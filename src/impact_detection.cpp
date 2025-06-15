@@ -1,4 +1,6 @@
 #include "../include/impact_detection.h"
+
+#include "sheet_detection.h"
 #include "../include/constants.h"
 #include "../include/utils.h"
 #include "../include/image_processing.h"
@@ -65,18 +67,7 @@ namespace subvision {
 
     bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results) {
 
-        // 1. Extract the actual Base64 data from the input string
-        // 3. Use cv::imdecode to convert bytes to a Mat
-        cv::Mat image = imageToProcess.clone();
-        if (image.empty()) {
-            std::cerr << "Error: cv::imdecode failed for input image. Corrupted data or unsupported format?" <<
-                    std::endl;
-            return false;
-        }
-        // This function would normally call get_sheet_picture which uses get_sheet_coordinates
-        // Since we're not implementing get_sheet_coordinates, we'll assume the image is already
-        // the sheet picture for demonstration purposes
-        cv::Mat sheetMat = image.clone();
+        cv::Mat sheetMat = getSheetPicture(imageToProcess.clone());
 
         // Resize to standard dimensions if needed
         if (sheetMat.cols != PICTURE_WIDTH_SHEET_DETECTION || sheetMat.rows != PICTURE_HEIGHT_SHEET_DETECTION) {

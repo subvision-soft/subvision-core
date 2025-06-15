@@ -134,11 +134,12 @@ namespace subvision {
                 static_cast<float>(coordinate.y) / height
             ));
         }
+        std::cout << "Converted " << percentageCoordinates.size() << " coordinates to percentage." << std::endl;
         return percentageCoordinates;
     }
 
-    std::vector<cv::Point> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates, int width, int height) {
-        std::vector<cv::Point> coordinates;
+    std::vector<cv::Point2f> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates, int width, int height) {
+        std::vector<cv::Point2f> coordinates;
         for (const auto &percentageCoordinate: percentageCoordinates) {
             coordinates.push_back(cv::Point(
                 static_cast<int>(percentageCoordinate.x * width),

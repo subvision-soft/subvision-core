@@ -10,11 +10,13 @@ LIB_SOURCES = src/utils.cpp \
 			src/image_processing.cpp \
 			src/target_detection.cpp \
 			src/impact_detection.cpp \
+			src/sheet_detection.cpp \
 			src/encoding.cpp
 
 # Options de compilation
 EMCC_FLAGS = -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 			-s EXPORT_ES6=1 -s MODULARIZE=1 -s ENVIRONMENT=web,worker \
+			-s DISABLE_EXCEPTION_CATCHING=2 \
 			-s USE_ES6_IMPORT_META=0 -s NO_EXIT_RUNTIME=1 \
 			-s EXPORTED_FUNCTIONS=['_malloc','_free'] \
 			-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','stringToUTF8','UTF8ToString'] \

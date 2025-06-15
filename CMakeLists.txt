@@ -25,6 +25,7 @@ set(LIB_SOURCES
     src/image_processing.cpp
     src/target_detection.cpp
     src/impact_detection.cpp
+    src/sheet_detection.cpp
     src/encoding.cpp
 )
 
