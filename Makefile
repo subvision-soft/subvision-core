@@ -15,7 +15,7 @@ LIB_SOURCES = src/utils.cpp \
 
 # Options de compilation
 EMCC_FLAGS = -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
-			-s EXPORT_ES6=1 -s MODULARIZE=1 -s ENVIRONMENT=web,worker \
+			-s MODULARIZE=1 -s ENVIRONMENT=web,worker \
 			-s DISABLE_EXCEPTION_CATCHING=0 -s SINGLE_FILE \
 			-s USE_ES6_IMPORT_META=0 -s NO_EXIT_RUNTIME=1 \
 			-s EXPORTED_FUNCTIONS=['_malloc','_free'] \
@@ -66,6 +66,18 @@ subvision: $(OUTPUT_DIR)
 		\`pkg-config --cflags --libs opencv4\` \
 		-o $(OUTPUT_DIR)/subvision_core.js \
 		$(EMCC_FLAGS) \
+		--bind"
+	cp web/index.html $(OUTPUT_DIR)/
+	@echo "SubvisionCV compilé avec succès. Les fichiers sont dans $(OUTPUT_DIR)/"
+
+# Compilation de l'application complète SubvisionCV
+subvision_es6: $(OUTPUT_DIR)
+	@echo "Compilation de SubvisionCV..."
+	docker run --rm -v $${PWD}:/src -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
+		-I./include \
+		\`pkg-config --cflags --libs opencv4\` \
+		-o $(OUTPUT_DIR)/subvision_core_es6.js \
+		$(EMCC_FLAGS) -s EXPORT_ES6=1 \
 		--bind"
 	cp web/index.html $(OUTPUT_DIR)/
 	@echo "SubvisionCV compilé avec succès. Les fichiers sont dans $(OUTPUT_DIR)/"

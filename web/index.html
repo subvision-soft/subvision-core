@@ -76,7 +76,7 @@
     </div>
 
     <script type="module">
-        import SubvisionCVModule from './subvision_core.js';
+        import SubvisionCVModule from './subvision_core_es6.js';
 
         let subvisionCV;
         let imageBase64;
@@ -160,6 +160,10 @@
                     resultsText += `   Angle: ${impact.angle.toFixed(2)} degrés\n\n`;
 
                 }
+
+
+
+
 
                 document.getElementById('results').textContent = resultsText;
             } catch (error) {
