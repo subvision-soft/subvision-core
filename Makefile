@@ -1,7 +1,7 @@
 # Makefile pour compiler le projet SubvisionCV avec Emscripten via Docker
 
 # Variables
-DOCKER_IMAGE = sha256:5873603785987880cdf1c82c97764b776e2ece6868e017497e2bda5f8474a1c5
+DOCKER_IMAGE = ghcr.io/subvision-soft/subvision-emscripten:2025.6.1
 OUTPUT_DIR = build_wasm
 SRC_DIR = .
 

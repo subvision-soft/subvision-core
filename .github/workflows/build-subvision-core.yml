@@ -16,10 +16,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-#      - name: Build Docker image
-#        run: |
-#          docker build -t subvision_cv_image -f web/Dockerfile .
-
       - name: Build subvision_core.js
         run: make subvision
 
