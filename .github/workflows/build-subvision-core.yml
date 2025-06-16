@@ -1,4 +1,4 @@
-name: Build Subvision Core
+name: Build and Release Subvision Core
 
 on:
   push:
@@ -7,26 +7,28 @@ on:
   pull_request:
     branches:
       - master
-env:
-  REGISTRY: ghcr.io
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Release notes'
+        required: false
+
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
+      - name: Get next version
+        uses: reecetech/version-increment@2023.10.2
+        id: version
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          scheme: calver
+          increment: patch
+
+      - name: Print version
+        run: echo "Version is ${{ steps.version.outputs.version }}"
 
       - name: Build subvision_core.js
         run: make subvision
@@ -36,3 +38,13 @@ jobs:
         with:
           name: subvision_core.js
           path: build_wasm/subvision_core.js
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          body: ${{ inputs.release_notes }}
+          files: build_wasm/subvision_core.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
