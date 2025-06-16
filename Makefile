@@ -16,7 +16,7 @@ LIB_SOURCES = src/utils.cpp \
 # Options de compilation
 EMCC_FLAGS = -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 			-s EXPORT_ES6=1 -s MODULARIZE=1 -s ENVIRONMENT=web,worker \
-			-s DISABLE_EXCEPTION_CATCHING=2 -s SINGLE_FILE \
+			-s DISABLE_EXCEPTION_CATCHING=0 -s SINGLE_FILE \
 			-s USE_ES6_IMPORT_META=0 -s NO_EXIT_RUNTIME=1 \
 			-s EXPORTED_FUNCTIONS=['_malloc','_free'] \
 			-s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','stringToUTF8','UTF8ToString'] \
