@@ -35,7 +35,7 @@ jobs:
             -s EXPORT_NAME='SubvisionCV' -s ASSERTIONS=1"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: subvision_core.js
           path: build_wasm/subvision_core.js
