@@ -12,7 +12,11 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+      id-token: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
