@@ -16,23 +16,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Build Docker image
-        run: |
-          docker build -t subvision_cv_image -f web/Dockerfile .
+#      - name: Build Docker image
+#        run: |
+#          docker build -t subvision_cv_image -f web/Dockerfile .
 
       - name: Build subvision_core.js
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/src -w /src subvision_cv_image bash -c "emcc src/utils.cpp src/image_processing.cpp src/target_detection.cpp src/impact_detection.cpp src/sheet_detection.cpp src/encoding.cpp emscripten_binding.cpp \
-            -I./include \
-            `pkg-config --cflags --libs opencv4` \
-            -o build_wasm/subvision_core.js \
-            -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
-            -s EXPORT_ES6=1 -s MODULARIZE=1 -s ENVIRONMENT=web,worker \
-            -s DISABLE_EXCEPTION_CATCHING=2 -s SINGLE_FILE \
-            -s USE_ES6_IMPORT_META=0 -s NO_EXIT_RUNTIME=1 \
-            -s EXPORTED_FUNCTIONS=['_malloc','_free'] \
-            -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','stringToUTF8','UTF8ToString'] \
-            -s EXPORT_NAME='SubvisionCV' -s ASSERTIONS=1"
+        run: make subvision
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
