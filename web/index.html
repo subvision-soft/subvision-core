@@ -150,14 +150,15 @@
                 document.getElementById('resultImage').style.display = 'block';
 
                 // Affichage des résultats
-                let resultsText = `Nombre d'impacts détectés: ${results.impacts.size()}\n\n`;
-                const impactCount = results.impacts.size();
-                for (let i = 0; i < impactCount; i++) {
-                    resultsText += `Impact ${i + 1}:\n`;
-                    resultsText += `  Zone: ${results.impacts.get(i).zone}\n`;
-                    resultsText += `  Score: ${results.impacts.get(i).score}\n`;
-                    resultsText += `  Distance: ${results.impacts.get(i).distance}\n`;
-                    resultsText += `  Angle: ${results.impacts.get(i).angle.toFixed(2)} degrés\n\n`;
+                let resultsText = `Nombre d'impacts détectés: ${results.impacts.length}\n\n`;
+
+                for (const impact of results.impacts) {
+                    resultsText += `Impact ${impact.index + 1}:\n`;
+                    resultsText += `   Zone: ${impact.zone}\n`;
+                    resultsText += `   Score: ${impact.score}\n`;
+                    resultsText += `   Distance: ${impact.distance}\n`;
+                    resultsText += `   Angle: ${impact.angle.toFixed(2)} degrés\n\n`;
+
                 }
 
                 document.getElementById('results').textContent = resultsText;

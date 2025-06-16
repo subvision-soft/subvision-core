@@ -109,38 +109,18 @@ namespace subvision {
     }
 
     std::map<int, Ellipse> getTargetsEllipse(const cv::Mat &image) {
-
-        auto start = std::chrono::high_resolution_clock::now();
         std::vector<int> zones = {
             SUBVISION_ZONE_TOP_LEFT, SUBVISION_ZONE_TOP_RIGHT, SUBVISION_ZONE_CENTER,
             SUBVISION_ZONE_BOTTOM_LEFT, SUBVISION_ZONE_BOTTOM_RIGHT
         };
 
-        std::vector<std::future<Ellipse> > ellipses;
-        ellipses.reserve(zones.size());
-        for (int i = 0; i < zones.size(); ++i) {
-            try {
-                ellipses.emplace_back(std::async(std::launch::async, getTargetEllipseForZone, image, i));
-            } catch (const std::exception &e) {
-                std::cerr << "Error creating async task for zone " << i << ": " << e.what() << std::endl;
-                throw;
-            }
+        std::map<int, Ellipse> ellipses;
+
+        for (const auto &zone: zones) {
+            ellipses[zone] = getTargetEllipseForZone(image, zone);
         }
 
-        std::map<int, Ellipse> targetCoordinates;
-        for (int i = 0; i < ellipses.size(); ++i) {
-            try {
-                targetCoordinates[i] = ellipses[i].get();
-            } catch (const std::exception &e) {
-                std::cerr << "Error retrieving result for zone " << i << ": " << e.what() << std::endl;
-                throw;
-            }
-        }
-
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour getTargetsEllipse: " << elapsed.count() << " secondes" << std::endl;
-        return targetCoordinates;
+        return ellipses;
     }
 
     std::map<int, Ellipse> targetCoordinatesToSheetCoordinates(const std::map<int, Ellipse> &ellipses) {
