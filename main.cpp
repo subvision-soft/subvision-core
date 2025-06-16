@@ -13,7 +13,7 @@
 #include "target_detection.h"
 
 int main() {
-    std::ifstream file("C:\\Users\\Paul\\CLionProjects\\subvision-cv\\demo_sheet.txt");
+    std::ifstream file("C:\\Users\\paulc\\CLionProjects\\subvision-core\\demo_sheet.txt");
     std::vector<unsigned char> data;
     if (file) {
         std::string line, number;
@@ -31,7 +31,7 @@ int main() {
 
 
 
-    // cv::Mat image_to_process = cv::imread("C:\\Users\\Paul\\CLionProjects\\subvision-cv\\sheet.png");
+    // cv::Mat image_to_process = cv::imread("C:\\\\Users\\\\Paul\\\\CLionProjects\\\\subvision-cv\\\\sheet.png");
 
     cv::Mat image_to_process(4000,1800 , CV_8UC4, data.data());
     if (image_to_process.empty()) {
