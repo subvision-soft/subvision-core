@@ -1,6 +1,6 @@
-# SubvisionCV Core
+# Subvision Core
 
-**SubvisionCV Core** is the WebAssembly (WASM) build of the core C++ algorithms powering
+**Subvision Core** is the WebAssembly (WASM) build of the core C++ computer visions algorithms powering
 the [Subvision](https://github.com/subvision-soft) underwater target shooting scoring system. This core is designed to
 run efficiently in web environments using [Emscripten](https://emscripten.org/).
 
@@ -9,7 +9,7 @@ It aims to be validated by the **FFESSM** (French Underwater Federation) for off
 
 ---
 
-## Features
+## 🚀 Features
 
 - C++ core logic for:
     - Sheet detection
@@ -21,7 +21,7 @@ It aims to be validated by the **FFESSM** (French Underwater Federation) for off
 
 ---
 
-## Repository Structure
+## 📁 Repository Structure
 ```
 ├── include/ # Header files
 ├── src/ # C++ core source files
@@ -33,14 +33,14 @@ It aims to be validated by the **FFESSM** (French Underwater Federation) for off
 
 ---
 
-## Prerequisites
+## ⚙️ Prerequisites
 
 - [Docker](https://www.docker.com/)
 - Internet access to pull the image `ghcr.io/subvision-soft/subvision-emscripten:2025.6.1`
 
 ---
 
-## Docker Image
+## 🐳 Docker Image
 
 Builds use the `ghcr.io/subvision-soft/subvision-emscripten:2025.6.1` Docker image, which is maintained in
 the [Subvision Stack project](https://github.com/subvision-soft/subvision-stack).
@@ -53,7 +53,7 @@ This image includes:
 
 ---
 
-## How to Build
+## 🔨 How to Build
 
 Run the following commands depending on your target:
 
@@ -73,7 +73,7 @@ The output will be located in the build_wasm/ directory.
 
 ---
 
-## Output Files
+## 📦 Output Files
 
 | File                  | Description                            |
 |-----------------------|----------------------------------------|
@@ -83,7 +83,7 @@ The output will be located in the build_wasm/ directory.
 
 ---
 
-## Makefile Targets
+## 🛠️ Makefile Targets
 
 | Target        | Description                          |
 |---------------|--------------------------------------|
@@ -92,6 +92,6 @@ The output will be located in the build_wasm/ directory.
 | subvision_es6 | Build ES6 module WebAssembly version |
 | help          | Show help message                    |
 
-## License
+## 📄 License
 
 MIT License – see [LICENSE](LICENSE) for details.
