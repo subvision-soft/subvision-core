@@ -41,6 +41,8 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           body: ${{ inputs.release_notes }}
-          files: build_wasm/subvision_core.js
+          files: |
+            build_wasm/subvision_core.js
+            build_wasm/subvision_core_es6.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
