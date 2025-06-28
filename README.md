@@ -1,87 +1,97 @@
-# SubvisionCV
+# SubvisionCV Core
 
-Bibliothèque de détection d'impacts sur cible de tir sportif utilisant OpenCV.
+**SubvisionCV Core** is the WebAssembly (WASM) build of the core C++ algorithms powering
+the [Subvision](https://github.com/subvision-soft) underwater target shooting scoring system. This core is designed to
+run efficiently in web environments using [Emscripten](https://emscripten.org/).
 
-## Compilation native
+Subvision is a mobile and web app developed to detect, locate, and score impacts on underwater target shooting sheets.
+It aims to be validated by the **FFESSM** (French Underwater Federation) for official competition use.
+
+---
+
+## Features
+
+- C++ core logic for:
+    - Sheet detection
+    - Target detection
+    - Impact localization
+    - Score computation
+- WebAssembly build for browser usage
+- Dockerized build environment for consistency
+
+---
+
+## Repository Structure
+```
+├── include/ # Header files
+├── src/ # C++ core source files
+├── web/ # HTML test interface
+├── emscripten_binding.cpp # Emscripten-specific glue code
+├── Makefile # Build system
+└── build_wasm/ # Output folder (generated)
+```
+
+---
+
+## Prerequisites
+
+- [Docker](https://www.docker.com/)
+- Internet access to pull the image `ghcr.io/subvision-soft/subvision-emscripten:2025.6.1`
+
+---
+
+## Docker Image
+
+Builds use the `ghcr.io/subvision-soft/subvision-emscripten:2025.6.1` Docker image, which is maintained in
+the [Subvision Stack project](https://github.com/subvision-soft/subvision-stack).
+
+This image includes:
+
+- Emscripten SDK
+- OpenCV with pkg-config
+- CMake and other tools required for building C++ and WASM
+
+---
+
+## How to Build
+
+Run the following commands depending on your target:
 
 ```bash
-mkdir build && cd build
-cmake ..
-make
+# Build both versions (standard + ES6)
+make all
+
+# Build the standard WebAssembly version
+make subvision
+
+# Build the ES6 module WebAssembly version
+make subvision_es6
 ```
 
-## Compilation avec Emscripten
+The output will be located in the build_wasm/ directory.
 
-### Prérequis
 
-1. Installez Emscripten SDK : [Instructions d'installation](https://emscripten.org/docs/getting_started/downloads.html)
+---
 
-2. Compilez OpenCV pour Emscripten :
+## Output Files
 
-```bash
-# Cloner OpenCV
-git clone https://github.com/opencv/opencv.git
-cd opencv
-mkdir build_wasm
-cd build_wasm
+| File                  | Description                            |
+|-----------------------|----------------------------------------|
+| subvision_core.js     | WebAssembly wrapper (standard version) |
+| subvision_core_es6.js | WebAssembly wrapper using ES6 modules  |
+| index.html            | Test interface for running in browser  |
 
-# Configurer et compiler avec Emscripten
-emcmake cmake -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/chemin/vers/votre/projet/opencv_emscripten_build \
-    -DBUILD_opencv_dnn=OFF \
-    -DBUILD_opencv_ml=OFF \
-    -DBUILD_opencv_video=OFF \
-    -DBUILD_opencv_stitching=OFF \
-    -DBUILD_opencv_objdetect=OFF \
-    -DBUILD_SHARED_LIBS=OFF \
-    -DBUILD_TESTS=OFF \
-    -DBUILD_PERF_TESTS=OFF \
-    -DBUILD_EXAMPLES=OFF \
-    ..
+---
 
-emmake -j8
-emmake install
-```
+## Makefile Targets
 
-### Compilation du projet
+| Target        | Description                          |
+|---------------|--------------------------------------|
+| all           | Build both standard and ES6 versions |
+| subvision     | Build standard WebAssembly version   |
+| subvision_es6 | Build ES6 module WebAssembly version |
+| help          | Show help message                    |
 
-```bash
-mkdir build_wasm && cd build_wasm
-emcmake cmake ..
-emmake
-```
+## License
 
-### Exécution du serveur de test
-
-```bash
-python3 -m http.server
-```
-
-Puis ouvrez votre navigateur à l'adresse http://localhost:8000 pour tester l'application.
-
-## Utilisation dans un projet JavaScript
-
-```javascript
-// Importation du module WebAssembly
-import SubvisionCVModule from './subvision_core.js';
-
-// Initialisation du module
-SubvisionCVModule().then(subvisionCV => {
-    // Analyse d'une image en base64
-    const imageBase64 = 'data:image/jpeg;base64,...'; // Remplacer par votre image en base64
-
-    // Appel de la fonction de détection d'impacts
-    const results = subvisionCV.processTargetImage(imageBase64);
-
-    // Utilisation des résultats
-    console.log(`Nombre d'impacts détectés: ${results.impacts.length}`);
-
-    // Image annotée (base64)
-    const annotatedImage = results.annotatedImage;
-
-    // Liste des impacts
-    results.impacts.forEach(impact => {
-        console.log(`Zone: ${impact.zone}, Score: ${impact.score}`);
-    });
-});
-```
+MIT License – see [LICENSE](LICENSE) for details.

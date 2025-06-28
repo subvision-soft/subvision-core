@@ -27,15 +27,11 @@ set(LIB_SOURCES
     src/target_detection.cpp
     src/impact_detection.cpp
     src/sheet_detection.cpp
-    src/encoding.cpp
 )
 
 # Créer une bibliothèque statique
 add_library(subvision_lib STATIC ${LIB_SOURCES})
 target_include_directories(subvision_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
-
-# Définir l'exécutable principal
-add_executable(subvision_core main.cpp)
 
 set(OpenCV_LIBS opencv_core
                 opencv_imgproc
@@ -46,9 +42,6 @@ set(OpenCV_LIBS opencv_core
                 opencv_calib3d
                 opencv_flann
                 opencv_dnn)
-
-# Lier la bibliothèque à l'exécutable principal
-target_link_libraries(subvision_core subvision_lib ${OpenCV_LIBS})
 
 # Création d'un répertoire resources si nécessaire
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources)

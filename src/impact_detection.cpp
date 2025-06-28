@@ -5,7 +5,6 @@
 #include "../include/utils.h"
 #include "../include/image_processing.h"
 #include "../include/target_detection.h"
-#include "../include/encoding.h"
 
 namespace subvision {
 

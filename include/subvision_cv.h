@@ -8,6 +8,5 @@
 #include "target_detection.h"
 #include "impact_detection.h"
 #include "sheet_detection.h"
-#include "encoding.h"
 
 #endif //SUBVISION_CORE_H

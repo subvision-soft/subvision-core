@@ -10,10 +10,9 @@ LIB_SOURCES = src/utils.cpp \
 			src/image_processing.cpp \
 			src/target_detection.cpp \
 			src/impact_detection.cpp \
-			src/sheet_detection.cpp \
-			src/encoding.cpp
+			src/sheet_detection.cpp
 
-# Options de compilation
+# Options de compilation emscripten
 EMCC_FLAGS = -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 			-s MODULARIZE=1 -s ENVIRONMENT=web,worker \
 			-s DISABLE_EXCEPTION_CATCHING=0 -s SINGLE_FILE \
@@ -23,9 +22,9 @@ EMCC_FLAGS = -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 			-s EXPORT_NAME='SubvisionCV' -s ASSERTIONS=1
 
 # Cibles
-.PHONY: all clean serve build_docker
+.PHONY: all subvision subvision_es6
 
-all: $(OUTPUT_DIR)/subvision_core.js $(OUTPUT_DIR)/index.html
+all: subvision subvision_es6
 
 # Création du répertoire de sortie
 $(OUTPUT_DIR):
@@ -44,20 +43,6 @@ $(OUTPUT_DIR)/subvision_core.js: $(OUTPUT_DIR)
 $(OUTPUT_DIR)/index.html: $(OUTPUT_DIR) web/index.html
 	cp web/index.html $(OUTPUT_DIR)/
 
-# Lance un serveur web pour tester l'application
-serve: all
-	cd $(OUTPUT_DIR) && python3 -m http.server 8080
-	@echo "Serveur démarré sur http://localhost:8080"
-
-# Nettoie les fichiers de sortie
-clean:
-	rm -rf $(OUTPUT_DIR)
-
-# Construit l'image Docker si elle n'existe pas déjà
-build_docker:
-	docker pull $(DOCKER_IMAGE) || (echo "Image Docker non disponible. Veuillez consulter le README.md pour les instructions de compilation d'OpenCV avec Emscripten.")
-
-
 # Compilation de l'application complète SubvisionCV
 subvision: $(OUTPUT_DIR)
 	@echo "Compilation de SubvisionCV..."
@@ -72,7 +57,7 @@ subvision: $(OUTPUT_DIR)
 
 # Compilation de l'application complète SubvisionCV
 subvision_es6: $(OUTPUT_DIR)
-	@echo "Compilation de SubvisionCV..."
+	@echo "Compilation de SubvisionCV en mode ES6..."
 	docker run --rm -v $${PWD}:/src -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
 		-I./include \
 		\`pkg-config --cflags --libs opencv4\` \
@@ -82,20 +67,12 @@ subvision_es6: $(OUTPUT_DIR)
 	cp web/index.html $(OUTPUT_DIR)/
 	@echo "SubvisionCV compilé avec succès. Les fichiers sont dans $(OUTPUT_DIR)/"
 
-# Lancer l'application SubvisionCV
-run_subvision: subvision
-	cd $(OUTPUT_DIR) && python3 -m http.server 8080
-	@echo "Application SubvisionCV disponible sur http://localhost:8080"
-
 # Aide
 help:
 	@echo "Makefile pour compiler SubvisionCV avec Emscripten via Docker"
 	@echo ""
 	@echo "Cibles disponibles:"
-	@echo "  all               : Compile le projet (cible par défaut)"
-	@echo "  serve             : Compile et lance un serveur web pour tester l'application"
-	@echo "  clean             : Supprime les fichiers générés"
-	@echo "  build_docker      : Vérifie/télécharge l'image Docker nécessaire"
+	@echo "  all               : Compile le projet complet (SubvisionCV et SubvisionCV ES6)"
 	@echo "  subvision         : Compile l'application SubvisionCV complète"
-	@echo "  run_subvision     : Compile et exécute l'application SubvisionCV"
+	@echo "  subvision_es6     : Compile l'application SubvisionCV en mode ES6"
 	@echo "  help              : Affiche cette aide"
