@@ -21,7 +21,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
+      - name: Build and run C++ unit tests
+          run: |
+            mkdir -p build
+            cd build
+            cmake ..
+            make -j$(nproc)
+            ctest --output-on-failure
       - name: Get next version
         uses: reecetech/version-increment@2023.10.2
         id: version
