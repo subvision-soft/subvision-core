@@ -19,6 +19,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      
+      - name: Install OpenCV
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libopencv-dev
+      
       - name: Build and test
         run: |
           mkdir -p build
@@ -26,6 +32,7 @@ jobs:
           cmake ..
           make -j$(nproc)
           ctest --output-on-failure
+      
       - name: Get next version
         uses: reecetech/version-increment@2023.10.2
         id: version
