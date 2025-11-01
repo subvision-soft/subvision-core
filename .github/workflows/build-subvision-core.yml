@@ -31,9 +31,8 @@ jobs:
           cd build
           cmake ..
           make -j$(nproc)
-          ls -la test/
-          ls -la test/resources/ || echo "No resources directory in test/"
-          ./test/subvision_tests
+          cd test
+          ./subvision_tests
       
       - name: Get next version
         uses: reecetech/version-increment@2023.10.2
