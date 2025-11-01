@@ -50,13 +50,23 @@ protected:
 };
 
 TEST_F(EllipseDetectionTests, TestEllipsesDetection) {
+    std::cout << "Looking for resources in: " << TESTS_RESOURCES_PATH << std::endl;
+    std::cout << "Current path: " << fs::current_path() << std::endl;
+    
+    if (!fs::exists(TESTS_RESOURCES_PATH)) {
+        std::cout << "Resources directory does not exist!" << std::endl;
+    }
+    
+    int pictureCount = 0;
     for (const auto& entry : fs::directory_iterator(TESTS_RESOURCES_PATH)) {
         if (entry.is_directory()) {
             std::string folder = entry.path().filename().string();
             if (folder != "TODO" && folder.find("WIP") == std::string::npos) {
                 SCOPED_TRACE("Testing folder: " + folder);
                 runEllipsesTest(folder);
+                pictureCount++;
             }
         }
     }
+    std::cout << "Ellipse Detection: Tested " << pictureCount << " pictures" << std::endl;
 }
