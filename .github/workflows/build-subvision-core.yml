@@ -49,9 +49,6 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
-    strategy:
-      matrix:
-        arch: [x64, Win32]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -64,20 +61,20 @@ jobs:
           choco install opencv -y
           echo "OpenCV_DIR=C:\tools\opencv\build" >> $env:GITHUB_ENV
 
-      - name: Build C++/CLI .NET Library (${{ matrix.arch }})
+      - name: Build C++/CLI .NET Library (x64)
         run: |
-          mkdir build-dotnet-${{ matrix.arch }}
-          cd build-dotnet-${{ matrix.arch }}
-          cmake -G "Visual Studio 17 2022" -A ${{ matrix.arch }} -DBUILD_CLI_WRAPPER=ON ..
+          mkdir build-dotnet-x64
+          cd build-dotnet-x64
+          cmake -G "Visual Studio 17 2022" -A x64 -DBUILD_CLI_WRAPPER=ON ..
           cmake --build . --config Release
 
-      - name: Upload .NET artifacts (${{ matrix.arch }})
+      - name: Upload .NET artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet-build-${{ matrix.arch }}
+          name: dotnet-build-x64
           path: |
-            build-dotnet-${{ matrix.arch }}/bin/**/*.dll
-            build-dotnet-${{ matrix.arch }}/bin/**/*.pdb
+            build-dotnet-x64/bin/**/*.dll
+            build-dotnet-x64/bin/**/*.pdb
 
   create-release:
     needs: [build-linux, build-windows-dotnet]
@@ -108,13 +105,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dotnet-build-x64
-          path: ./dotnet-artifacts-x64
-
-      - name: Download .NET x86 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dotnet-build-Win32
-          path: ./dotnet-artifacts-x86
+          path: ./dotnet-artifacts
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -125,7 +116,6 @@ jobs:
           files: |
             wasm-artifacts/subvision_core.js
             wasm-artifacts/subvision_core_es6.js
-            dotnet-artifacts-x64/**/*.dll
-            dotnet-artifacts-x86/**/*.dll
+            dotnet-artifacts/**/*.dll
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
