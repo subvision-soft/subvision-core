@@ -52,6 +52,32 @@ if(BUILD_TESTS AND NOT EMSCRIPTEN)
     add_subdirectory(test)
 endif()
 
+# Configuration C++/CLI pour .NET
+option(BUILD_CLI_WRAPPER "Build C++/CLI .NET wrapper" OFF)
+if(BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
+    # C++/CLI requires MSVC
+    if(MSVC)
+        add_library(SubvisionNET SHARED cli_wrapper.cpp ${LIB_SOURCES})
+        target_include_directories(SubvisionNET PUBLIC ${CMAKE_SOURCE_DIR}/include)
+        target_link_libraries(SubvisionNET ${OpenCV_LIBS})
+
+        # Enable C++/CLI support
+        set_target_properties(SubvisionNET PROPERTIES
+            COMMON_LANGUAGE_RUNTIME ""
+            VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2"
+        )
+        target_compile_options(SubvisionNET PRIVATE /clr)
+
+        # Set output name
+        set_target_properties(SubvisionNET PROPERTIES
+            OUTPUT_NAME "SubvisionNET"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+    else()
+        message(WARNING "C++/CLI wrapper requires MSVC compiler")
+    endif()
+endif()
+
 # Configuration WebAssembly pour Emscripten
 if(EMSCRIPTEN)
     # Création de la cible WebAssembly
