@@ -81,10 +81,16 @@ if(BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
             /std:c++17  # C++/CLI works best with C++17
         )
 
-        # Set output name
+        # Set output name with architecture suffix
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(ARCH_SUFFIX "x64")
+        else()
+            set(ARCH_SUFFIX "x86")
+        endif()
+
         set_target_properties(SubvisionNET PROPERTIES
-            OUTPUT_NAME "SubvisionNET"
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+            OUTPUT_NAME "SubvisionNET-${ARCH_SUFFIX}"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${ARCH_SUFFIX}"
         )
     else()
         message(WARNING "C++/CLI wrapper requires MSVC compiler")

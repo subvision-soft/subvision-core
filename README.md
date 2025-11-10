@@ -87,14 +87,23 @@ The output will be located in the `build_wasm/` directory.
 ### .NET Build (Windows)
 
 ```bash
-# Build the C++/CLI .NET wrapper
-mkdir build-dotnet
-cd build-dotnet
+# Build the C++/CLI .NET wrapper for x64
+mkdir build-dotnet-x64
+cd build-dotnet-x64
 cmake -G "Visual Studio 17 2022" -A x64 -DBUILD_CLI_WRAPPER=ON ..
+cmake --build . --config Release
+
+# Build for x86 (32-bit)
+cd ..
+mkdir build-dotnet-x86
+cd build-dotnet-x86
+cmake -G "Visual Studio 17 2022" -A Win32 -DBUILD_CLI_WRAPPER=ON ..
 cmake --build . --config Release
 ```
 
-The output `SubvisionNET.dll` will be located in `build-dotnet\bin\Release\`.
+The output will be:
+- `build-dotnet-x64\bin\x64\SubvisionNET-x64.dll` (64-bit)
+- `build-dotnet-x86\bin\x86\SubvisionNET-x86.dll` (32-bit)
 
 ### Native C++ Build
 
@@ -124,9 +133,10 @@ cd test
 
 ### .NET
 
-| File              | Description                         |
-|-------------------|-------------------------------------|
-| SubvisionNET.dll  | .NET assembly with C++/CLI bindings |
+| File                   | Description                              |
+|------------------------|------------------------------------------|
+| SubvisionNET-x64.dll   | .NET assembly for 64-bit applications    |
+| SubvisionNET-x86.dll   | .NET assembly for 32-bit applications    |
 
 ---
 
