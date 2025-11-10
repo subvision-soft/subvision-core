@@ -59,9 +59,12 @@ endif()
 if(BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
     # C++/CLI requires MSVC
     if(MSVC)
-        add_library(SubvisionNET SHARED cli_wrapper.cpp ${LIB_SOURCES})
+        # Create the C++/CLI wrapper library (only compile the wrapper with /clr)
+        add_library(SubvisionNET SHARED cli_wrapper.cpp)
         target_include_directories(SubvisionNET PUBLIC ${CMAKE_SOURCE_DIR}/include)
-        target_link_libraries(SubvisionNET ${OpenCV_LIBS})
+
+        # Link against the native library (compiled without /clr)
+        target_link_libraries(SubvisionNET PRIVATE subvision_lib ${OpenCV_LIBS})
 
         # Disable C++ modules and standards that conflict with /clr
         set_target_properties(SubvisionNET PROPERTIES
@@ -71,7 +74,7 @@ if(BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
             VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2"
         )
 
-        # Enable C++/CLI and disable incompatible features
+        # Enable C++/CLI only for the wrapper file
         target_compile_options(SubvisionNET PRIVATE
             /clr
             /EHa  # Exception handling for C++/CLI
