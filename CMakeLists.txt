@@ -48,12 +48,14 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources)
 
 # Activation des tests
 option(BUILD_TESTS "Build tests" ON)
-if(BUILD_TESTS AND NOT EMSCRIPTEN)
+option(BUILD_CLI_WRAPPER "Build C++/CLI .NET wrapper" OFF)
+
+# Don't build tests when building CLI wrapper (they conflict with /clr)
+if(BUILD_TESTS AND NOT EMSCRIPTEN AND NOT BUILD_CLI_WRAPPER)
     add_subdirectory(test)
 endif()
 
 # Configuration C++/CLI pour .NET
-option(BUILD_CLI_WRAPPER "Build C++/CLI .NET wrapper" OFF)
 if(BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
     # C++/CLI requires MSVC
     if(MSVC)
@@ -61,12 +63,20 @@ if(BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
         target_include_directories(SubvisionNET PUBLIC ${CMAKE_SOURCE_DIR}/include)
         target_link_libraries(SubvisionNET ${OpenCV_LIBS})
 
-        # Enable C++/CLI support
+        # Disable C++ modules and standards that conflict with /clr
         set_target_properties(SubvisionNET PROPERTIES
+            CXX_STANDARD 17
+            CXX_SCAN_FOR_MODULES OFF
             COMMON_LANGUAGE_RUNTIME ""
             VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2"
         )
-        target_compile_options(SubvisionNET PRIVATE /clr)
+
+        # Enable C++/CLI and disable incompatible features
+        target_compile_options(SubvisionNET PRIVATE
+            /clr
+            /EHa  # Exception handling for C++/CLI
+            /std:c++17  # C++/CLI works best with C++17
+        )
 
         # Set output name
         set_target_properties(SubvisionNET PROPERTIES
