@@ -113,6 +113,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           body: ${{ inputs.release_notes }}
+          make_latest: ${{ steps.version.outputs.pre-release-label == '' }}
           files: |
             wasm-artifacts/subvision.js
             wasm-artifacts/subvision.mjs
