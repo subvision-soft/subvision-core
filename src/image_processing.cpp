@@ -183,10 +183,10 @@ namespace subvision {
             return emptyEllipse;
         }
 
-        const auto maxIt = std::ranges::max_element(contours,
-                                                    [](const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
-                                                        return contourArea(a) < contourArea(b);
-                                                    });
+        const auto maxIt = std::max_element(contours.begin(), contours.end(),
+            [](const std::vector<cv::Point>& a, const std::vector<cv::Point>& b) {
+                return contourArea(a) < contourArea(b);
+            });
 
         const std::vector<cv::Point> &biggestContour = *maxIt;
 
