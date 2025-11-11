@@ -1,7 +1,6 @@
 #include "../include/target_detection.h"
 
 #include <future>
-#include <ranges>
 
 #include "../include/constants.h"
 #include "../include/utils.h"
@@ -166,7 +165,7 @@ namespace subvision {
         constexpr float pi = 3.14159265f;
         constexpr float halfPi = pi * 0.5f;
 
-        for (const auto &ellipseContrat: coordinates | std::views::values) {
+        for (const auto &[_key, ellipseContrat]: coordinates) {
             const Ellipse ellipseCrossTip = growEllipse(ellipseContrat, 2.2f);
             const Ellipse ellipseMouche = growEllipse(ellipseContrat, 0.2f);
             const Ellipse ellipsePetitBlanc = growEllipse(ellipseContrat, 0.6f);
