@@ -12,10 +12,8 @@ on:
         required: false
 
 jobs:
-  build-wasm:
+  test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -33,7 +31,16 @@ jobs:
           make -j$(nproc)
           cd test
           ./subvision_tests
-      
+
+  build-wasm:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Build subvision.js & subvision.mjs
         run: make all
 
@@ -46,6 +53,7 @@ jobs:
             build_wasm/subvision.mjs
 
   build-dotnet:
+    needs: test
     runs-on: windows-latest
     permissions:
       contents: write
