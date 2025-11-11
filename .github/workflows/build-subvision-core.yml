@@ -12,10 +12,8 @@ on:
         required: false
 
 jobs:
-  build-wasm:
+  test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -33,7 +31,16 @@ jobs:
           make -j$(nproc)
           cd test
           ./subvision_tests
-      
+
+  build-wasm:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Build subvision.js & subvision.mjs
         run: make all
 
@@ -46,6 +53,7 @@ jobs:
             build_wasm/subvision.mjs
 
   build-dotnet:
+    needs: test
     runs-on: windows-latest
     permissions:
       contents: write
@@ -109,10 +117,19 @@ jobs:
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
+        if: |
+          github.event_name == 'push' &&
+          (
+            startsWith(github.ref, 'refs/heads/master') ||
+            startsWith(github.ref, 'refs/heads/main') ||
+            startsWith(github.ref, 'refs/heads/develop')
+          )        
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
           body: ${{ inputs.release_notes }}
+          prerelease : ${{ steps.version.outputs.pre-release-label != '' }}
+          make_latest: ${{ steps.version.outputs.pre-release-label == '' }}
           files: |
             wasm-artifacts/subvision.js
             wasm-artifacts/subvision.mjs
