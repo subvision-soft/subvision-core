@@ -12,7 +12,7 @@ on:
         required: false
 
 jobs:
-  build-linux:
+  build-wasm:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,18 +34,18 @@ jobs:
           cd test
           ./subvision_tests
       
-      - name: Build subvision_core.js & subvision_core_es6.js
+      - name: Build subvision.js & subvision.mjs
         run: make all
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: wasm-build
+          name: wasm-artifacts
           path: |
-            build_wasm/subvision_core.js
-            build_wasm/subvision_core_es6.js
+            build_wasm/subvision.js
+            build_wasm/subvision.mjs
 
-  build-windows-dotnet:
+  build-dotnet:
     runs-on: windows-latest
     permissions:
       contents: write
@@ -71,13 +71,13 @@ jobs:
       - name: Upload .NET artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet-build-x64
+          name: dotnet-artifacts-x64
           path: |
             build-dotnet-x64/bin/**/*.dll
             build-dotnet-x64/bin/**/*.pdb
 
   create-release:
-    needs: [build-linux, build-windows-dotnet]
+    needs: [build-wasm, build-dotnet]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -98,13 +98,13 @@ jobs:
       - name: Download WASM artifacts
         uses: actions/download-artifact@v4
         with:
-          name: wasm-build
+          name: wasm-artifacts
           path: ./wasm-artifacts
 
       - name: Download .NET x64 artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dotnet-build-x64
+          name: dotnet-artifacts-x64
           path: ./dotnet-artifacts
 
       - name: Create GitHub Release
@@ -114,8 +114,8 @@ jobs:
           name: ${{ steps.version.outputs.version }}
           body: ${{ inputs.release_notes }}
           files: |
-            wasm-artifacts/subvision_core.js
-            wasm-artifacts/subvision_core_es6.js
+            wasm-artifacts/subvision.js
+            wasm-artifacts/subvision.mjs
             dotnet-artifacts/**/*.dll
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
