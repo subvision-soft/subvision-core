@@ -41,7 +41,7 @@ namespace subvision {
 
         Ellipse ellipse = retrieveEllipse(close);
 
-        constexpr auto ellipseIsValid = [](const Ellipse &e) {
+        auto ellipseIsValid = [](const Ellipse &e) {
             const float w = std::get<1>(e).width;
             const float h = std::get<1>(e).height;
             return w >= h * 0.7f && w <= h * 1.3f;
@@ -107,7 +107,7 @@ namespace subvision {
     }
 
     std::map<int, Ellipse> getTargetsEllipse(const cv::Mat &image) {
-        const std::vector zones = {
+        const std::vector<int> zones = {
             SUBVISION_ZONE_TOP_LEFT, SUBVISION_ZONE_TOP_RIGHT, SUBVISION_ZONE_CENTER,
             SUBVISION_ZONE_BOTTOM_LEFT, SUBVISION_ZONE_BOTTOM_RIGHT
         };
