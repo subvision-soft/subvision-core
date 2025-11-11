@@ -3,21 +3,21 @@
 
 namespace subvision {
 
-    inline float toRadians(const float angle) {
+    float toRadians(const float angle) {
         constexpr float degToRad = static_cast<float>(CV_PI) / 180.0f;
         return angle * degToRad;
     }
 
-    inline float toDegrees(const float angle) {
+    float toDegrees(const float angle) {
         constexpr float radToDeg = 180.0f / static_cast<float>(CV_PI);
         return angle * radToDeg;
     }
 
-    inline float clamp(const float value, const float min, const float max) {
+    float clamp(const float value, const float min, const float max) {
         return std::max(min, std::min(max, value));
     }
 
-    inline cv::Point tupleIntCast(const cv::Point2f &point) {
+    cv::Point tupleIntCast(const cv::Point2f &point) {
         return {static_cast<int>(point.x), static_cast<int>(point.y)};
     }
 
@@ -44,19 +44,19 @@ namespace subvision {
 
 
 
-    inline Ellipse growEllipse(const Ellipse &ellipse, const float factor) {
+    Ellipse growEllipse(const Ellipse &ellipse, const float factor) {
         const cv::Point2f &center = std::get<0>(ellipse);
         const cv::Size2f &radii = std::get<1>(ellipse);
         return std::make_tuple(center, cv::Size2f(radii.width * factor, radii.height * factor), std::get<2>(ellipse));
     }
 
-    inline float getDistance(const cv::Point2f &point1, const cv::Point2f &point2) {
+    float getDistance(const cv::Point2f &point1, const cv::Point2f &point2) {
         const float dx = point1.x - point2.x;
         const float dy = point1.y - point2.y;
         return std::sqrt(dx * dx + dy * dy);
     }
 
-    inline float getAngle(const cv::Point2f &point1, const cv::Point2f &point2) {
+    float getAngle(const cv::Point2f &point1, const cv::Point2f &point2) {
         return atan2(point2.y - point1.y, point2.x - point1.x);
     }
 
