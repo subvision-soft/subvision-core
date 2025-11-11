@@ -3,94 +3,88 @@
 
 namespace subvision {
 
-    float toRadians(float angle) {
-        return angle * static_cast<float>(CV_PI) / 180.0f;
+    inline float toRadians(const float angle) {
+        constexpr float degToRad = static_cast<float>(CV_PI) / 180.0f;
+        return angle * degToRad;
     }
 
-    float toDegrees(float angle) {
-        return angle * 180.0f / static_cast<float>(CV_PI);
+    inline float toDegrees(const float angle) {
+        constexpr float radToDeg = 180.0f / static_cast<float>(CV_PI);
+        return angle * radToDeg;
     }
 
-    float clamp(float value, float min, float max) {
+    inline float clamp(const float value, const float min, const float max) {
         return std::max(min, std::min(max, value));
     }
 
-    cv::Point tupleIntCast(const cv::Point2f &point) {
-        return cv::Point(static_cast<int>(point.x), static_cast<int>(point.y));
+    inline cv::Point tupleIntCast(const cv::Point2f &point) {
+        return {static_cast<int>(point.x), static_cast<int>(point.y)};
     }
 
-    cv::Point2f rotatePoint(const cv::Point2f &center, const cv::Point2f &point, float angle) {
-        float s = sin(angle);
-        float c = cos(angle);
+    cv::Point2f rotatePoint(const cv::Point2f &center, const cv::Point2f &point, const float angle) {
+        const float s = sin(angle);
+        const float c = cos(angle);
 
-        float translatedX = point.x - center.x;
-        float translatedY = point.y - center.y;
+        const float translatedX = point.x - center.x;
+        const float translatedY = point.y - center.y;
 
-        float rotatedX = translatedX * c - translatedY * s;
-        float rotatedY = translatedX * s + translatedY * c;
+        const float rotatedX = translatedX * c - translatedY * s;
+        const float rotatedY = translatedX * s + translatedY * c;
 
-        return cv::Point2f(rotatedX + center.x, rotatedY + center.y);
+        return {rotatedX + center.x, rotatedY + center.y};
     }
 
-    cv::Point2f getPointOnEllipse(const Ellipse &ellipse, float angle) {
+    cv::Point2f getPointOnEllipse(const Ellipse &ellipse, const float angle) {
         const cv::Point2f &center = std::get<0>(ellipse);
         const cv::Size2f &radii = std::get<1>(ellipse);
-        float x = center.x + cos(angle) * (radii.width / 2);
-        float y = center.y + sin(angle) * (radii.height / 2);
-        return cv::Point2f(x, y);
+        const float x = center.x + cos(angle) * (radii.width / 2);
+        const float y = center.y + sin(angle) * (radii.height / 2);
+        return {x, y};
     }
 
 
 
-    Ellipse growEllipse(const Ellipse &ellipse, float factor) {
+    inline Ellipse growEllipse(const Ellipse &ellipse, const float factor) {
         const cv::Point2f &center = std::get<0>(ellipse);
         const cv::Size2f &radii = std::get<1>(ellipse);
         return std::make_tuple(center, cv::Size2f(radii.width * factor, radii.height * factor), std::get<2>(ellipse));
     }
 
-    float getDistance(const cv::Point2f &point1, const cv::Point2f &point2) {
-        return sqrt(pow(point1.x - point2.x, 2) + pow(point1.y - point2.y, 2));
+    inline float getDistance(const cv::Point2f &point1, const cv::Point2f &point2) {
+        const float dx = point1.x - point2.x;
+        const float dy = point1.y - point2.y;
+        return std::sqrt(dx * dx + dy * dy);
     }
 
-    float getAngle(const cv::Point2f &point1, const cv::Point2f &point2) {
+    inline float getAngle(const cv::Point2f &point1, const cv::Point2f &point2) {
         return atan2(point2.y - point1.y, point2.x - point1.x);
     }
 
     int getRealDistance(const cv::Point2f &center, const cv::Point2f &border, const cv::Point2f &impact) {
-        float length = getDistance(center, border);
-        float distance = getDistance(center, impact);
-        float percent = distance / length;
-        float realLength = 45.0f;
-        float millimeterDistance = realLength * percent;
+        const float length = getDistance(center, border);
+        const float distance = getDistance(center, impact);
+        const float percent = distance / length;
+        constexpr float realLength = 45.0f;
+        const float millimeterDistance = realLength * percent;
         return cvRound(millimeterDistance);
     }
 
     int getScore(int distance) {
-        int score = 570;
-        int i = 0;
-        int maximumImpactDistance = 48;
+        constexpr int maximumImpactDistance = 48;
 
         if (distance > maximumImpactDistance) {
             return 0;
         }
 
-        for (i = 0; i < 5; i++) {
-            if (distance <= 0) {
-                break;
-            }
-            score -= 6;
-            distance -= 1;
+        if (distance <= 0) {
+            return 570;
         }
 
-        for (; i < 48; i++) {
-            if (distance <= 0) {
-                break;
-            }
-            score -= 3;
-            distance -= 1;
+        if (distance <= 5) {
+            return 570 - (distance * 6);
         }
 
-        return score;
+        return 570 - 30 - ((distance - 5) * 3);
     }
 
     cv::Rect getCropCoordinates(const cv::Mat &image, int targetZone) {
@@ -120,31 +114,37 @@ namespace subvision {
         return cv::Rect(y1, x1, y2 - y1, x2 - x1);
     }
 
-    cv::Mat getTargetPicture(const cv::Mat &sheetMat, int targetZone) {
-        cv::Mat sheetMatClone = sheetMat.clone();
-        cv::Rect coordinates = getCropCoordinates(sheetMatClone, targetZone);
-        return sheetMatClone(coordinates);
+    cv::Mat getTargetPicture(const cv::Mat &sheetMat, const int targetZone) {
+        const cv::Rect coordinates = getCropCoordinates(sheetMat, targetZone);
+        return sheetMat(coordinates).clone();
     }
 
-    std::vector<cv::Point2f> coordinatesToPercentage(const std::vector<cv::Point> &coordinates, int width, int height) {
+    std::vector<cv::Point2f> coordinatesToPercentage(const std::vector<cv::Point> &coordinates, const int width, const int height) {
         std::vector<cv::Point2f> percentageCoordinates;
+        percentageCoordinates.reserve(coordinates.size());
+
+        const float invWidth = 1.0f / static_cast<float>(width);
+        const float invHeight = 1.0f / static_cast<float>(height);
+
         for (const auto &coordinate: coordinates) {
-            percentageCoordinates.push_back(cv::Point2f(
-                static_cast<float>(coordinate.x) / width,
-                static_cast<float>(coordinate.y) / height
-            ));
+            percentageCoordinates.emplace_back(
+                static_cast<float>(coordinate.x) * invWidth,
+                static_cast<float>(coordinate.y) * invHeight
+            );
         }
         std::cout << "Converted " << percentageCoordinates.size() << " coordinates to percentage." << std::endl;
         return percentageCoordinates;
     }
 
-    std::vector<cv::Point2f> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates, int width, int height) {
+    std::vector<cv::Point2f> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates, const int width, const int height) {
         std::vector<cv::Point2f> coordinates;
+        coordinates.reserve(percentageCoordinates.size());
+
         for (const auto &percentageCoordinate: percentageCoordinates) {
-            coordinates.push_back(cv::Point(
-                static_cast<int>(percentageCoordinate.x * width),
-                static_cast<int>(percentageCoordinate.y * height)
-            ));
+            coordinates.emplace_back(
+                percentageCoordinate.x * static_cast<float>(width),
+                percentageCoordinate.y * static_cast<float>(height)
+            );
         }
         return coordinates;
     }

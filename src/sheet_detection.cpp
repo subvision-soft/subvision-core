@@ -5,8 +5,6 @@
 #include "sheet_detection.h"
 #include <opencv2/opencv.hpp>
 #include <vector>
-#include <cmath>
-#include <optional>
 
 #include "constants.h"
 #include "image_processing.h"
@@ -18,27 +16,27 @@ namespace subvision {
 
 
 
-    // Détection des coordonnées du plastron (par seuillage de la luminosité)
     std::vector<Point2f> getSheetCoordinates(const Mat& sheet_mat) {
-        auto start = std::chrono::high_resolution_clock::now();
+        const auto start = std::chrono::high_resolution_clock::now();
         Mat mat_resized;
         resize(sheet_mat, mat_resized, Size(PICTURE_WIDTH_SHEET_DETECTION, PICTURE_HEIGHT_SHEET_DETECTION));
+
         Mat hls;
         cvtColor(mat_resized, hls, COLOR_BGR2HLS);
-        std::vector<Mat> channels;
-        split(hls, channels);
-        Mat light = channels[1];
 
-        // Seuillage simple, à ajuster selon vos images
-        Mat mask;
+        std::vector<Mat> channels(3);
+        split(hls, channels);
+        Mat &light = channels[1];
+
         double minVal, maxVal;
         minMaxLoc(light, &minVal, &maxVal);
 
         maxVal = std::max(maxVal, 120.0);
-        minVal = (maxVal - minVal) / 2 + minVal;
+        minVal = (maxVal - minVal) * 0.5 + minVal;
 
-
+        Mat mask;
         inRange(light, cv::Scalar(minVal), cv::Scalar(maxVal), mask);
+
         std::cout << "Start find contours" << std::endl;
         std::vector<std::vector<cv::Point>> contours;
         findContours(mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -46,13 +44,16 @@ namespace subvision {
 
         const auto biggest = getBiggestValidContour(contours);
         std::cout << "Biggest contour size: " << biggest.size() << std::endl;
+
         if (biggest.empty()) {
             cout << "No valid contour found" << endl;
             throw std::runtime_error("No valid contour found");
         }
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
+
+        const auto end = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<double> elapsed = end - start;
         std::cout << "Temps écoulé pour getSheetCoordinates: " << elapsed.count() << " secondes" << std::endl;
+
         return coordinatesToPercentage(biggest, PICTURE_WIDTH_SHEET_DETECTION, PICTURE_HEIGHT_SHEET_DETECTION);
     }
 
