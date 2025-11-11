@@ -2,11 +2,9 @@ name: Build and Release Subvision Core
 
 on:
   push:
-    branches:
-      - master
+    branches: []
   pull_request:
-    branches:
-      - master
+    branches: []
   workflow_dispatch:
     inputs:
       release_notes:
@@ -14,19 +12,19 @@ on:
         required: false
 
 jobs:
-  build-and-release:
+  build-wasm:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
+
       - name: Install OpenCV
         run: |
           sudo apt-get update
           sudo apt-get install -y libopencv-dev
-      
+
       - name: Build and test
         run: |
           mkdir -p build
@@ -36,6 +34,57 @@ jobs:
           cd test
           ./subvision_tests
       
+      - name: Build subvision.js & subvision.mjs
+        run: make all
+
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-artifacts
+          path: |
+            build_wasm/subvision.js
+            build_wasm/subvision.mjs
+
+  build-dotnet:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install OpenCV
+        run: |
+          choco install opencv -y
+          echo "OpenCV_DIR=C:\tools\opencv\build" >> $env:GITHUB_ENV
+
+      - name: Build C++/CLI .NET Library (x64)
+        run: |
+          mkdir build-dotnet-x64
+          cd build-dotnet-x64
+          cmake -G "Visual Studio 17 2022" -A x64 -DBUILD_CLI_WRAPPER=ON ..
+          cmake --build . --config Release
+
+      - name: Upload .NET artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-artifacts-x64
+          path: |
+            build-dotnet-x64/bin/**/*.dll
+            build-dotnet-x64/bin/**/*.pdb
+
+  create-release:
+    needs: [build-wasm, build-dotnet]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Get next version
         uses: reecetech/version-increment@2023.10.2
         id: version
@@ -46,8 +95,17 @@ jobs:
       - name: Print version
         run: echo "Version is ${{ steps.version.outputs.version }}"
 
-      - name: Build subvision_core.js & subvision_core_es6.js
-        run: make all
+      - name: Download WASM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-artifacts
+          path: ./wasm-artifacts
+
+      - name: Download .NET x64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-artifacts-x64
+          path: ./dotnet-artifacts
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -56,7 +114,8 @@ jobs:
           name: ${{ steps.version.outputs.version }}
           body: ${{ inputs.release_notes }}
           files: |
-            build_wasm/subvision_core.js
-            build_wasm/subvision_core_es6.js
+            wasm-artifacts/subvision.js
+            wasm-artifacts/subvision.mjs
+            dotnet-artifacts/**/*.dll
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

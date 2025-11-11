@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 23)
 # Vérifier si on compile avec Emscripten
 if(EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORT_NAME='SubvisionCV'")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORT_NAME='Subvision'")
     set(CMAKE_EXECUTABLE_SUFFIX ".js")
 
     # OpenCV doit être configuré pour Emscripten
@@ -48,8 +48,53 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources)
 
 # Activation des tests
 option(BUILD_TESTS "Build tests" ON)
-if(BUILD_TESTS AND NOT EMSCRIPTEN)
+option(BUILD_CLI_WRAPPER "Build C++/CLI .NET wrapper" OFF)
+
+# Don't build tests when building CLI wrapper (they conflict with /clr)
+if(BUILD_TESTS AND NOT EMSCRIPTEN AND NOT BUILD_CLI_WRAPPER)
     add_subdirectory(test)
+endif()
+
+# Configuration C++/CLI pour .NET
+if(BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
+    # C++/CLI requires MSVC
+    if(MSVC)
+        # Create the C++/CLI wrapper library (only compile the wrapper with /clr)
+        add_library(Subvision SHARED cli_wrapper.cpp)
+        target_include_directories(Subvision PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+        # Link against the native library (compiled without /clr)
+        target_link_libraries(Subvision PRIVATE subvision_lib ${OpenCV_LIBS})
+
+        # Disable C++ modules and standards that conflict with /clr
+        set_target_properties(Subvision PROPERTIES
+            CXX_STANDARD 17
+            CXX_SCAN_FOR_MODULES OFF
+            COMMON_LANGUAGE_RUNTIME ""
+            VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2"
+        )
+
+        # Enable C++/CLI only for the wrapper file
+        target_compile_options(Subvision PRIVATE
+            /clr
+            /EHa  # Exception handling for C++/CLI
+            /std:c++17  # C++/CLI works best with C++17
+        )
+
+        # Set output name with architecture suffix
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(ARCH_SUFFIX "x64")
+        else()
+            set(ARCH_SUFFIX "x86")
+        endif()
+
+        set_target_properties(Subvision PROPERTIES
+            OUTPUT_NAME "subvision-${ARCH_SUFFIX}"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${ARCH_SUFFIX}"
+        )
+    else()
+        message(WARNING "C++/CLI wrapper requires MSVC compiler")
+    endif()
 endif()
 
 # Configuration WebAssembly pour Emscripten
