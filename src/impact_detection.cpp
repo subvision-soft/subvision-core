@@ -1,5 +1,6 @@
 #include "../include/impact_detection.h"
 
+#include "../include/logging.h"
 #include "sheet_detection.h"
 #include "../include/constants.h"
 #include "../include/utils.h"
@@ -71,7 +72,7 @@ namespace subvision {
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour drawAndGetImpactsPoints: " << elapsed.count() << " secondes" << std::endl;
+        subvision::log("Temps écoulé pour drawAndGetImpactsPoints: " + std::to_string(elapsed.count()) + " secondes");
         return points;
     }
 

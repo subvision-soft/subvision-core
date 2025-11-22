@@ -1,5 +1,6 @@
 #include "../include/utils.h"
 #include "../include/constants.h"
+#include "../include/logging.h"
 
 namespace subvision {
 
@@ -132,7 +133,7 @@ namespace subvision {
                 static_cast<float>(coordinate.y) * invHeight
             );
         }
-        std::cout << "Converted " << percentageCoordinates.size() << " coordinates to percentage." << std::endl;
+        subvision::log("Converted " + std::to_string(percentageCoordinates.size()) + " coordinates to percentage.");
         return percentageCoordinates;
     }
 

@@ -1,8 +1,10 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <string>
 #include "include/types.h"
 #include "include/impact_detection.h"
 #include "include/sheet_detection.h"
+#include "include/logging.h"
 
 using namespace emscripten;
 
@@ -34,13 +36,13 @@ struct JSImpactResults {
 
 template<typename T>
 val getSheetCoordinates(int width, int height, const val &typedArray) {
-    std::cout << "Start processing getSheetCoordinates with width: " << width << ", height: " << height << std::endl;
+    subvision::log("Start processing getSheetCoordinates with width: " + std::to_string(width) + ", height: " + std::to_string(height));
     std::vector<T> vec = convertJSArrayToNumberVector<T>(typedArray);
-    std::cout << "Vector size: " << vec.size() << std::endl;
+    subvision::log("Vector size: " + std::to_string(vec.size()));
     cv::Mat mat(height, width, CV_8UC4, vec.data());
     cv::cvtColor(mat, mat, cv::COLOR_RGBA2BGR);
 
-    std::cout << "Processing getSheetCoordinates with width: " << width << ", height: " << height << std::endl;
+    subvision::log("Processing getSheetCoordinates with width: " + std::to_string(width) + ", height: " + std::to_string(height));
     auto points = subvision::getSheetCoordinates(mat);
 
     val jsArray = val::array();
@@ -64,7 +66,7 @@ JSImpactResults processTargetImage(int width, int height, const val &typedArray)
     std::vector<T> vec = convertJSArrayToNumberVector<T>(typedArray);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
-    std::cout << "Temps écoulé pour vecFromJSArray: " << elapsed.count() << " secondes" << std::endl;
+    subvision::log("Temps écoulé pour vecFromJSArray: " + std::to_string(elapsed.count()) + " secondes");
     cv::Mat mat(height, width, CV_8UC4, vec.data());
     cv::cvtColor(mat, mat, cv::COLOR_RGBA2BGR);
 
@@ -122,4 +124,5 @@ EMSCRIPTEN_BINDINGS (subvision_module) {
 
     function("processTargetImage", &processTargetImage<unsigned char>);
     function("getSheetCoordinates", &getSheetCoordinates<unsigned char>);
+    function("setLoggingEnabled", &subvision::setLoggingEnabled);
 }

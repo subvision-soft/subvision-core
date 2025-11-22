@@ -1,5 +1,4 @@
 #include <filesystem>
-#include <iostream>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -7,8 +6,8 @@
 #include <gtest/gtest.h>
 #include "../include/constants.h"
 #include "../include/image_processing.h"
-#include "../include/target_detection.h"
 #include "../include/utils.h"
+#include "../include/logging.h"
 
 namespace fs = std::filesystem;
 
@@ -68,11 +67,11 @@ protected:
 };
 
 TEST_F(ImpactDetectionTests, TestImpactsDetection) {
-    std::cout << "Looking for resources in: " << TESTS_RESOURCES_PATH << std::endl;
-    std::cout << "Current path: " << fs::current_path() << std::endl;
-    
+    subvision::log("Looking for resources in: " + TESTS_RESOURCES_PATH);
+    subvision::log("Current path: " + fs::current_path().string());
+
     if (!fs::exists(TESTS_RESOURCES_PATH)) {
-        std::cout << "Resources directory does not exist!" << std::endl;
+        subvision::log("Resources directory does not exist!");
     }
     
     int pictureCount = 0;
@@ -86,5 +85,5 @@ TEST_F(ImpactDetectionTests, TestImpactsDetection) {
             }
         }
     }
-    std::cout << "Impact Detection: Tested " << pictureCount << " pictures" << std::endl;
+    subvision::log("Impact Detection: Tested " + std::to_string(pictureCount) + " pictures");
 }

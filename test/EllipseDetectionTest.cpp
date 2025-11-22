@@ -1,12 +1,10 @@
 #include <filesystem>
-#include <iostream>
 #include <string>
-#include <vector>
 #include <opencv2/opencv.hpp>
 #include <gtest/gtest.h>
 #include "../include/constants.h"
-#include "../include/image_processing.h"
 #include "../include/target_detection.h"
+#include "../include/logging.h"
 
 namespace fs = std::filesystem;
 
@@ -50,11 +48,11 @@ protected:
 };
 
 TEST_F(EllipseDetectionTests, TestEllipsesDetection) {
-    std::cout << "Looking for resources in: " << TESTS_RESOURCES_PATH << std::endl;
-    std::cout << "Current path: " << fs::current_path() << std::endl;
-    
+    subvision::log("Looking for resources in: " + TESTS_RESOURCES_PATH);
+    subvision::log("Current path: " + fs::current_path().string());
+
     if (!fs::exists(TESTS_RESOURCES_PATH)) {
-        std::cout << "Resources directory does not exist!" << std::endl;
+        subvision::log("Resources directory does not exist!");
     }
     
     int pictureCount = 0;
@@ -68,5 +66,5 @@ TEST_F(EllipseDetectionTests, TestEllipsesDetection) {
             }
         }
     }
-    std::cout << "Ellipse Detection: Tested " << pictureCount << " pictures" << std::endl;
+    subvision::log("Ellipse Detection: Tested " + std::to_string(pictureCount) + " pictures");
 }
