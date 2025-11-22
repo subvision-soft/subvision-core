@@ -10,7 +10,8 @@ LIB_SOURCES = src/utils.cpp \
 			src/image_processing.cpp \
 			src/target_detection.cpp \
 			src/impact_detection.cpp \
-			src/sheet_detection.cpp
+			src/sheet_detection.cpp \
+			src/logging.cpp
 
 # Options de compilation emscripten
 EMCC_FLAGS = -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
