@@ -3,6 +3,7 @@
 #include <future>
 
 #include "../include/constants.h"
+#include "../include/logging.h"
 #include "../include/utils.h"
 #include "../include/image_processing.h"
 
@@ -98,7 +99,7 @@ namespace subvision {
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour getTargetEllipse: " << elapsed.count() << " secondes" << std::endl;
+        subvision::log("Temps écoulé pour getTargetEllipse: " + std::to_string(elapsed.count()) + " secondes");
         return ellipse;
     }
 

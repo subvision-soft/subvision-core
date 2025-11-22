@@ -9,8 +9,8 @@
 #include "constants.h"
 #include "image_processing.h"
 #include "utils.h"
+#include "../include/logging.h"
 using namespace cv;
-using namespace std;
 namespace subvision {
 
 
@@ -37,22 +37,22 @@ namespace subvision {
         Mat mask;
         inRange(light, cv::Scalar(minVal), cv::Scalar(maxVal), mask);
 
-        std::cout << "Start find contours" << std::endl;
+        subvision::log("Start find contours");
         std::vector<std::vector<cv::Point>> contours;
         findContours(mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-        std::cout << "End find contours" << std::endl;
+        subvision::log("End find contours");
 
         const auto biggest = getBiggestValidContour(contours);
-        std::cout << "Biggest contour size: " << biggest.size() << std::endl;
+        subvision::log("Biggest contour size: " + std::to_string(biggest.size()));
 
         if (biggest.empty()) {
-            cout << "No valid contour found" << endl;
+            subvision::log("No valid contour found");
             throw std::runtime_error("No valid contour found");
         }
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour getSheetCoordinates: " << elapsed.count() << " secondes" << std::endl;
+        subvision::log("Temps écoulé pour getSheetCoordinates: " + std::to_string(elapsed.count()) + " secondes");
 
         return coordinatesToPercentage(biggest, PICTURE_WIDTH_SHEET_DETECTION, PICTURE_HEIGHT_SHEET_DETECTION);
     }

@@ -1,10 +1,12 @@
 #include "../include/image_processing.h"
+
+#include "../include/logging.h"
 #include "../include/constants.h"
 #include "../include/utils.h"
 
 namespace subvision {
     std::vector<cv::Point> getBiggestValidContour(const std::vector<std::vector<cv::Point> > &contours) {
-        std::cout << "Start processing getBiggestValidContour with " << contours.size() << " contours" << std::endl;
+        subvision::log("Start processing getBiggestValidContour with " + std::to_string(contours.size()) + " contours");
         std::vector<cv::Point> biggestContour;
         double biggestArea = 0;
         constexpr double totalArea = PICTURE_WIDTH_SHEET_DETECTION * PICTURE_HEIGHT_SHEET_DETECTION;
@@ -18,7 +20,7 @@ namespace subvision {
         approx.reserve(4);
 
         for (const auto &contour: contours) {
-            std::cout <<  "Processing contour with size: " << contour.size() << std::endl;
+            subvision::log("Processing contour with size: " + std::to_string(contour.size()));
             if (contour.size() < 4)
                 continue;
 
@@ -74,8 +76,7 @@ namespace subvision {
             biggestArea = area;
         }
 
-        std::cout << "Biggest contour found with size: " << biggestContour.size() << std::endl;
-
+        subvision::log( "Biggest contour found with size: " + std::to_string(biggestContour.size()));
         return biggestContour;
     }
 
@@ -121,7 +122,7 @@ namespace subvision {
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour getImpactsMask: " << elapsed.count() << " secondes" << std::endl;
+        subvision::log("Temps écoulé pour getImpactsMask: " + std::to_string(elapsed.count()) + " secondes");
         return result;
     }
 
@@ -145,7 +146,7 @@ namespace subvision {
         }
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour getImpactsCoordinates: " << elapsed.count() << " secondes" << std::endl;
+        subvision::log("Temps écoulé pour getImpactsCoordinates: " + std::to_string(elapsed.count()) + " secondes");
         return centers;
     }
 
@@ -194,7 +195,7 @@ namespace subvision {
             const cv::RotatedRect rotatedRect = fitEllipse(biggestContour);
             const auto end = std::chrono::high_resolution_clock::now();
             const std::chrono::duration<double> elapsed = end - start;
-            std::cout << "Temps écoulé pour retrieveEllipse: " << elapsed.count() << " secondes" << std::endl;
+            subvision::log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
             return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
         }
 
@@ -208,13 +209,13 @@ namespace subvision {
             const cv::RotatedRect rotatedRect = fitEllipse(ptsEdges);
             const auto end = std::chrono::high_resolution_clock::now();
             const std::chrono::duration<double> elapsed = end - start;
-            std::cout << "Temps écoulé pour retrieveEllipse: " << elapsed.count() << " secondes" << std::endl;
+            subvision::log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
             return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
         }
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour retrieveEllipse: " << elapsed.count() << " secondes" << std::endl;
+        subvision::log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
         return emptyEllipse;
     }
 }
