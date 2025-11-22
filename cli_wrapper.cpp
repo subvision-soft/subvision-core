@@ -1,6 +1,7 @@
 #include "include/types.h"
 #include "include/impact_detection.h"
 #include "include/sheet_detection.h"
+#include "include/logging.h"
 #include <msclr/marshal_cppstd.h>
 
 using namespace System;
