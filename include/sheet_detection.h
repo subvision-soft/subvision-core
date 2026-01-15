@@ -8,6 +8,7 @@
 
 namespace subvision {
     cv::Mat getSheetPicture(const cv::Mat& image) ;
+    cv::Mat getSheetPictureManually(const cv::Mat& image,const std::vector<cv::Point2f> coordinates) ;
     std::vector<cv::Point2f> getSheetCoordinates(const cv::Mat& sheet_mat) ;
 }
 

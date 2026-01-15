@@ -11,7 +11,7 @@ namespace subvision {
                                                 const std::map<int, Ellipse> &targetsEllipsis);
 
     // Traiter une image pour détecter les impacts
-    bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results);
+    bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results, const std::vector<cv::Point2f>& coordinates = {});
 }
 
 #endif //SUBVISION_CORE_IMPACT_DETECTION_H

@@ -76,9 +76,9 @@ namespace subvision {
         return points;
     }
 
-    bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results) {
+    bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results, const std::vector<cv::Point2f>& coordinates) {
 
-        cv::Mat sheetMat = getSheetPicture(imageToProcess.clone());
+        cv::Mat sheetMat = coordinates.empty() ? getSheetPicture(imageToProcess.clone()):  getSheetPictureManually(imageToProcess.clone(),coordinates);
 
         // Resize to standard dimensions if needed
         if (sheetMat.cols != PICTURE_WIDTH_SHEET_DETECTION || sheetMat.rows != PICTURE_HEIGHT_SHEET_DETECTION) {

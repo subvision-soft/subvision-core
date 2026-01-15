@@ -61,7 +61,7 @@ namespace SubvisionNET {
         // imageData: RGBA image data as byte array
         // width: image width
         // height: image height
-        static ImpactResults^ ProcessTargetImage(array<unsigned char>^ imageData, int width, int height) {
+        static ImpactResults^ ProcessTargetImage(array<unsigned char>^ imageData, int width, int height, List<(float x, float y)> coordinates) {
             // Convert managed array to native vector
             std::vector<unsigned char> nativeData(imageData->Length);
             Marshal::Copy((array<unsigned char>^)imageData, 0, IntPtr(nativeData.data()), imageData->Length);
@@ -73,7 +73,9 @@ namespace SubvisionNET {
 
             // Call native function
             subvision::ImpactResults nativeResults;
-            bool success = subvision::retrieveImpacts(bgrMat, nativeResults);
+            bool success = subvision::retrieveImpacts(bgrMat, nativeResults,coords?
+        .Select(p => new Point2f { X = p.x, Y = p.y })
+        .ToArray() ?? Array.Empty<Point2f>(););
 
             // Convert results to managed types
             ImpactResults^ managedResults = gcnew ImpactResults();
