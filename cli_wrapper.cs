@@ -73,9 +73,7 @@ namespace SubvisionNET {
 
             // Call native function
             subvision::ImpactResults nativeResults;
-            bool success = subvision::retrieveImpacts(bgrMat, nativeResults,coords?
-        .Select(p => new Point2f { X = p.x, Y = p.y })
-        .ToArray() ?? Array.Empty<Point2f>(););
+            bool success = subvision::retrieveImpacts(bgrMat, nativeResults,coords?.Select(p => new Point2f { X = p.x, Y = p.y }).ToArray() ?? Array.Empty<Point2f>());
 
             // Convert results to managed types
             ImpactResults^ managedResults = gcnew ImpactResults();

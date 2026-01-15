@@ -61,7 +61,7 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
     # C++/CLI requires MSVC
     if (MSVC)
         # Create the C++/CLI wrapper library (only compile the wrapper with /clr)
-        add_library(Subvision SHARED cli_wrapper.cpp)
+        add_library(Subvision SHARED cli_wrapper.cs)
         target_include_directories(Subvision PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
         # Link against the native library (compiled without /clr)
