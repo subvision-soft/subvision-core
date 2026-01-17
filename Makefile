@@ -67,6 +67,20 @@ subvision_es6: $(OUTPUT_DIR)
 		--bind"
 	cp web/index.html $(OUTPUT_DIR)/
 	@echo "Subvision compilé avec succès. Les fichiers sont dans $(OUTPUT_DIR)/"
+	
+# Makefile (extrait) — correction pour la cible `subvision_dotnet`
+subvision_dotnet:
+	@echo "Compilation du wrapper .NET (C++/CLI)..."
+ifeq ($(OS),Windows_NT)
+	@if not exist build-dotnet-x64 mkdir build-dotnet-x64
+	@cd build-dotnet-x64 && cmake -G "Visual Studio 17 2022" -A x64 -DBUILD_CLI_WRAPPER=ON ..
+	@cmake --build build-dotnet-x64 --config Release
+else
+	@mkdir -p build-dotnet-x64
+	@cd build-dotnet-x64 && cmake -DBUILD_CLI_WRAPPER=ON ..
+	@cmake --build build-dotnet-x64 --config Release -- -j$(nproc)
+endif
+	@echo "Artifacts disponibles dans build-dotnet-x64/bin/"
 
 # Aide
 help:

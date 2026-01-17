@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30.5)
+cmake_minimum_required(VERSION 3.27.7)
 
 project(subvision_core)
 
@@ -61,7 +61,7 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
     # C++/CLI requires MSVC
     if (MSVC)
         # Create the C++/CLI wrapper library (only compile the wrapper with /clr)
-        add_library(Subvision SHARED cli_wrapper.cs)
+        add_library(Subvision SHARED cli_wrapper.cpp)
         target_include_directories(Subvision PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
         # Link against the native library (compiled without /clr)
@@ -71,7 +71,7 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
         set_target_properties(Subvision PROPERTIES
                 CXX_STANDARD 17
                 CXX_SCAN_FOR_MODULES OFF
-                COMMON_LANGUAGE_RUNTIME ""
+                COMMON_LANGUAGE_RUNTIME "true"
                 VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2"
         )
 

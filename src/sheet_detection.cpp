@@ -64,7 +64,7 @@ namespace subvision {
     }
 
     // Recadrage manuel du plastron à partir de l'image initiale
-    Mat getSheetPictureManually(const Mat& image,const std::vector<Point2f>& coordinates) {
+    Mat getSheetPictureManually(const Mat& image,const std::vector<Point2f> coordinates){
         if (coordinates.empty()) {
             throw std::runtime_error("Sheet coordinates not found");
         }
