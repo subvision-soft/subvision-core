@@ -9,7 +9,6 @@ using namespace System::Collections::Generic;
 using namespace System::Runtime::InteropServices;
 
 namespace SubvisionNET {
-
     // .NET representation of Impact
     public ref class Impact {
     public:
@@ -61,47 +60,77 @@ namespace SubvisionNET {
         // imageData: RGBA image data as byte array
         // width: image width
         // height: image height
-        static ImpactResults^ ProcessTargetImage(array<unsigned char>^ imageData, int width, int height, List<Point2f^>^ coordinates) {
-            // Convert managed array to native vector
-            std::vector<unsigned char> nativeData(imageData->Length);
-            Marshal::Copy((array<unsigned char>^)imageData, 0, IntPtr(nativeData.data()), imageData->Length);
+        // C++
+        static ImpactResults^ ProcessTargetImage (array<unsigned char>^ imageData, int width, int height, List<Point2f^>^ coordinates)
+        {
+            if (imageData == nullptr || width <= 0 || height <= 0) return nullptr;
 
-            // Create OpenCV Mat from the data (RGBA format)
-            cv::Mat mat(height, width, CV_8UC4, nativeData.data());
+            int length = imageData->Length;
+            if (length == 0) return nullptr;
+
+            // Calcul du pas (bytes par ligne) et du nombre de canaux
+            int step = length / height;
+            if (step <= 0) return nullptr;
+            int channels = step / width;
+            if (channels <= 0) return nullptr;
+
+            int type;
+            if (channels == 1) type = CV_8UC1;
+            else if (channels == 3) type = CV_8UC3;
+            else if (channels == 4) type = CV_8UC4;
+            else return nullptr; // format non supporté
+
+            // Pinner le tableau managé et construire une cv::Mat qui utilise ces données (avec step correct)
+            pin_ptr<unsigned char> pinned = &imageData[0];
+            unsigned char* dataPtr = pinned;
+            cv::Mat mat(height, width, type, dataPtr, step);
+
+            // Convertir en BGR attendu par le pipeline natif
             cv::Mat bgrMat;
-            cv::cvtColor(mat, bgrMat, cv::COLOR_RGBA2BGR);
+            if (channels == 4)
+            {
+                cv::cvtColor(mat, bgrMat, cv::COLOR_RGBA2BGR); // ajuster si vos données sont BGRA
+            }
+            else if (channels == 3)
+            {
+                cv::cvtColor(mat, bgrMat, cv::COLOR_RGB2BGR); // ajuster si vos données sont déjà BGR
+            }
+            else // 1 canal
+            {
+                cv::cvtColor(mat, bgrMat, cv::COLOR_GRAY2BGR);
+            }
 
-            // Convert managed coordinates to native vector<cv::Point2f>
+            // Convertir coordonnées managées -> natives
             std::vector<cv::Point2f> nativeCoords;
-            if (coordinates != nullptr && coordinates->Count > 0) {
+            if (coordinates != nullptr && coordinates->Count > 0)
+            {
                 nativeCoords.reserve(coordinates->Count);
-                for each (Point2f^ p in coordinates) {
+                for each (Point2f^ p in coordinates)
+                {
                     nativeCoords.emplace_back(p->X, p->Y);
                 }
             }
 
-            // Call native function
+            // Appel à la fonction native
             subvision::ImpactResults nativeResults;
             bool success = subvision::retrieveImpacts(bgrMat, nativeResults, nativeCoords);
 
-            // Convert results to managed types
+            // Convertir résultats -> types managés
             ImpactResults^ managedResults = gcnew ImpactResults();
-
-            if (success) {
-                // Convert annotated image back to RGBA
+            if (success)
+            {
                 cv::Mat annotatedRGBA;
                 cv::cvtColor(nativeResults.annotatedImage, annotatedRGBA, cv::COLOR_BGR2RGBA);
 
-                // Copy image data to managed array
-                int dataSize = annotatedRGBA.total() * annotatedRGBA.elemSize();
+                int dataSize = static_cast<int>(annotatedRGBA.total() * annotatedRGBA.elemSize());
                 managedResults->AnnotatedImageData = gcnew array<unsigned char>(dataSize);
                 Marshal::Copy(IntPtr(annotatedRGBA.data), managedResults->AnnotatedImageData, 0, dataSize);
                 managedResults->Width = annotatedRGBA.cols;
                 managedResults->Height = annotatedRGBA.rows;
                 managedResults->Channels = annotatedRGBA.channels();
 
-                // Convert impacts
-                for (const auto& impact : nativeResults.impacts) {
+                for (const auto& impact : nativeResults.impacts)
+                {
                     Impact^ managedImpact = gcnew Impact(
                         impact.distance,
                         impact.score,
@@ -115,6 +144,7 @@ namespace SubvisionNET {
 
             return managedResults;
         }
+
 
         // Get sheet coordinates from image
         // imageData: RGBA image data as byte array
