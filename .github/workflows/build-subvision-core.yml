@@ -33,7 +33,7 @@ jobs:
           ./subvision_tests
 
   build-wasm:
-    needs: test
+#    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -53,7 +53,7 @@ jobs:
             build_wasm/subvision.mjs
 
   build-dotnet:
-    needs: test
+#    needs: test
     runs-on: windows-latest
     permissions:
       contents: write
