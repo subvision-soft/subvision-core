@@ -37,8 +37,18 @@ protected:
         cv::bitwise_xor(maskImpacts, binaryExpectedMask, xorMat);
         double similarity = 1.0 - static_cast<double>(cv::countNonZero(xorMat)) / xorMat.total();
 
-        ASSERT_GE(similarity, 0.999) << "Impacts mask failed for folder " << folder << ", similarity: " << similarity;
 
+        // Enregistrer des images pour le débogage si l'assertion va échouer
+        if (similarity < 0.999) {
+            fs::path debugDir = fs::path(TESTS_RESOURCES_PATH) / folder / "debug";
+            fs::create_directories(debugDir);
+            cv::imwrite((debugDir / "mask_expected.png").string(), binaryExpectedMask);
+            cv::imwrite((debugDir / "mask_detected.png").string(), maskImpacts);
+            cv::imwrite((debugDir / "xor.png").string(), xorMat);
+            cv::imwrite((debugDir / "input.png").string(), img);
+        }
+
+        ASSERT_GE(similarity, 0.999) << "Impacts mask failed for folder " << folder << ", similarity: " << similarity;
         std::vector<cv::Mat> splitResult;
         cv::split(binaryExpectedMask, splitResult);
         cv::Mat hsvSimulate;

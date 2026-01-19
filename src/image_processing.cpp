@@ -109,10 +109,12 @@ namespace subvision {
         cv::Mat result = cv::Mat::zeros(mask.size(), mask.type());
         std::vector<cv::Point> ellipsePoints;
         ellipsePoints.reserve(90);
-
+        const float kMinEllipseAxis = image.cols * 0.015f;
         for (const auto &contour: contours) {
             if (contour.size() >= 5) {
                 const cv::RotatedRect ellipse = cv::fitEllipse(contour);
+                if (ellipse.size.width < kMinEllipseAxis || ellipse.size.height < kMinEllipseAxis)
+                    continue;
                 ellipsePoints.clear();
                 cv::ellipse2Poly(ellipse.center, cv::Size2f(ellipse.size.width * 0.5f, ellipse.size.height * 0.5f),
                                  static_cast<int>(ellipse.angle), 0, 360, 4, ellipsePoints);
