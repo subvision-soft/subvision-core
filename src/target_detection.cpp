@@ -9,6 +9,7 @@
 
 namespace subvision {
     Ellipse getTargetEllipse(const cv::Mat &mat) {
+        log("getTargetEllipse");
         const auto start = std::chrono::high_resolution_clock::now();
 
         cv::Mat circle = cv::Mat::zeros(mat.rows, mat.cols, CV_8UC1);
@@ -25,12 +26,13 @@ namespace subvision {
         bitwise_not(value, value);
         double minVal, maxVal;
         minMaxLoc(value, &minVal, &maxVal);
-        minVal = maxVal - (maxVal - minVal) / 1.5;
+        minVal = maxVal - (maxVal - minVal) / 1.6;
 
         cv::Mat valueMask;
         inRange(value, cv::Scalar(minVal), cv::Scalar(maxVal), valueMask);
-
+        // cv::imshow("valueMask", valueMask);
         const cv::Mat impacts = getImpactsMask(mat);
+        // cv::imshow("impacts", impacts);
         cv::Mat notImpacts;
         bitwise_not(impacts, notImpacts);
         bitwise_and(valueMask, notImpacts, valueMask);
@@ -39,7 +41,7 @@ namespace subvision {
         cv::erode(valueMask, close, element, cv::Point(-1, -1), 10);
         cv::dilate(close, close, element, cv::Point(-1, -1), 20);
         cv::erode(close, close, element, cv::Point(-1, -1), 10);
-
+        // cv::imshow("close",close);
         Ellipse ellipse = retrieveEllipse(close);
 
         auto ellipseIsValid = [](const Ellipse &e) {
@@ -50,7 +52,7 @@ namespace subvision {
 
         std::vector<cv::Point> ellipsePoints;
         ellipsePoints.reserve(360);
-
+        // cv::waitKey(0);
         try {
             cv::Mat empty = cv::Mat::zeros(mat.size(), mat.type());
             const cv::Point center = tupleIntCast(std::get<0>(ellipse));
@@ -104,11 +106,13 @@ namespace subvision {
     }
 
     Ellipse getTargetEllipseForZone(const cv::Mat &image, int zone) {
+        log("getTargetEllipseForZone");
         return getTargetEllipse(getTargetPicture(image, zone));
     }
 
     std::map<int, Ellipse> getTargetsEllipse(const cv::Mat &image) {
-        const std::vector<int> zones = {
+        log("getTargetsEllipse");
+        const std::vector zones = {
             SUBVISION_ZONE_TOP_LEFT, SUBVISION_ZONE_TOP_RIGHT, SUBVISION_ZONE_CENTER,
             SUBVISION_ZONE_BOTTOM_LEFT, SUBVISION_ZONE_BOTTOM_RIGHT
         };
@@ -123,6 +127,7 @@ namespace subvision {
     }
 
     std::map<int, Ellipse> targetCoordinatesToSheetCoordinates(const std::map<int, Ellipse> &ellipses) {
+        subvision::log("targetCoordinatesToSheetCoordinates");
         std::map<int, Ellipse> newEllipses;
 
         for (const auto &[key, value]: ellipses) {
@@ -161,10 +166,10 @@ namespace subvision {
     }
 
     void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat) {
+        subvision::log("drawTargets");
         constexpr int drawingWidth = 1;
         const cv::Scalar targetColor(0, 0, 255);
-        constexpr float pi = 3.14159265f;
-        constexpr float halfPi = pi * 0.5f;
+        constexpr float halfPi = CV_PI * 0.5f;
 
         for (const auto &[_key, ellipseContrat]: coordinates) {
             const Ellipse ellipseCrossTip = growEllipse(ellipseContrat, 2.2f);
@@ -177,36 +182,41 @@ namespace subvision {
             const cv::Size2f size = std::get<1>(ellipseContrat);
             const float angle = std::get<2>(ellipseContrat);
 
-            ellipse(sheetMat, center, cv::Size2f(size.width * 0.5f, size.height * 0.5f), angle, 0, 360, targetColor, drawingWidth);
+            ellipse(sheetMat, center, cv::Size2f(size.width * 0.5f, size.height * 0.5f), angle, 0, 360, targetColor,
+                    drawingWidth);
 
             const cv::Point centerMouche = tupleIntCast(std::get<0>(ellipseMouche));
             const cv::Size2f sizeMouche = std::get<1>(ellipseMouche);
             const float angleMouche = std::get<2>(ellipseMouche);
 
-            ellipse(sheetMat, centerMouche, cv::Size2f(sizeMouche.width * 0.5f, sizeMouche.height * 0.5f), angleMouche, 0, 360, targetColor, drawingWidth);
+            ellipse(sheetMat, centerMouche, cv::Size2f(sizeMouche.width * 0.5f, sizeMouche.height * 0.5f), angleMouche,
+                    0, 360, targetColor, drawingWidth);
 
             const cv::Point centerPetitBlanc = tupleIntCast(std::get<0>(ellipsePetitBlanc));
             const cv::Size2f sizePetitBlanc = std::get<1>(ellipsePetitBlanc);
             const float anglePetitBlanc = std::get<2>(ellipsePetitBlanc);
 
-            ellipse(sheetMat, centerPetitBlanc, cv::Size2f(sizePetitBlanc.width * 0.5f, sizePetitBlanc.height * 0.5f), anglePetitBlanc, 0, 360, targetColor, drawingWidth);
+            ellipse(sheetMat, centerPetitBlanc, cv::Size2f(sizePetitBlanc.width * 0.5f, sizePetitBlanc.height * 0.5f),
+                    anglePetitBlanc, 0, 360, targetColor, drawingWidth);
 
             const cv::Point centerMoyenBlanc = tupleIntCast(std::get<0>(ellipseMoyenBlanc));
             const cv::Size2f sizeMoyenBlanc = std::get<1>(ellipseMoyenBlanc);
             const float angleMoyenBlanc = std::get<2>(ellipseMoyenBlanc);
 
-            ellipse(sheetMat, centerMoyenBlanc, cv::Size2f(sizeMoyenBlanc.width * 0.5f, sizeMoyenBlanc.height * 0.5f), angleMoyenBlanc, 0, 360, targetColor, drawingWidth);
+            ellipse(sheetMat, centerMoyenBlanc, cv::Size2f(sizeMoyenBlanc.width * 0.5f, sizeMoyenBlanc.height * 0.5f),
+                    angleMoyenBlanc, 0, 360, targetColor, drawingWidth);
 
             const cv::Point centerGrandBlanc = tupleIntCast(std::get<0>(ellipseGrandBlanc));
             const cv::Size2f sizeGrandBlanc = std::get<1>(ellipseGrandBlanc);
             const float angleGrandBlanc = std::get<2>(ellipseGrandBlanc);
 
-            ellipse(sheetMat, centerGrandBlanc, cv::Size2f(sizeGrandBlanc.width * 0.5f, sizeGrandBlanc.height * 0.5f), angleGrandBlanc, 0, 360, targetColor, drawingWidth);
+            ellipse(sheetMat, centerGrandBlanc, cv::Size2f(sizeGrandBlanc.width * 0.5f, sizeGrandBlanc.height * 0.5f),
+                    angleGrandBlanc, 0, 360, targetColor, drawingWidth);
 
-            const cv::Point2f topPoint = getPointOnEllipse(ellipseCrossTip, halfPi);
-            const cv::Point2f bottomPoint = getPointOnEllipse(ellipseCrossTip, pi + halfPi);
-            const cv::Point2f leftPoint = getPointOnEllipse(ellipseCrossTip, pi);
-            const cv::Point2f rightPoint = getPointOnEllipse(ellipseCrossTip, 0.0f);
+            const cv::Point2f topPoint = getPointOnEllipse(ellipseCrossTip, 0  );
+            const cv::Point2f bottomPoint = getPointOnEllipse(ellipseCrossTip, 90);
+            const cv::Point2f leftPoint = getPointOnEllipse(ellipseCrossTip, 180);
+            const cv::Point2f rightPoint = getPointOnEllipse(ellipseCrossTip, 270);
 
             line(sheetMat, tupleIntCast(topPoint), tupleIntCast(bottomPoint), targetColor, drawingWidth);
             line(sheetMat, tupleIntCast(leftPoint), tupleIntCast(rightPoint), targetColor, drawingWidth);

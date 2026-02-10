@@ -6,7 +6,7 @@
 
 namespace subvision {
     std::vector<cv::Point> getBiggestValidContour(const std::vector<std::vector<cv::Point> > &contours) {
-        subvision::log("Start processing getBiggestValidContour with " + std::to_string(contours.size()) + " contours");
+        log("Start processing getBiggestValidContour with " + std::to_string(contours.size()) + " contours");
         std::vector<cv::Point> biggestContour;
         double biggestArea = 0;
         constexpr double totalArea = PICTURE_WIDTH_SHEET_DETECTION * PICTURE_HEIGHT_SHEET_DETECTION;
@@ -20,7 +20,7 @@ namespace subvision {
         approx.reserve(4);
 
         for (const auto &contour: contours) {
-            subvision::log("Processing contour with size: " + std::to_string(contour.size()));
+            log("Processing contour with size: " + std::to_string(contour.size()));
             if (contour.size() < 4)
                 continue;
 
@@ -76,62 +76,129 @@ namespace subvision {
             biggestArea = area;
         }
 
-        subvision::log( "Biggest contour found with size: " + std::to_string(biggestContour.size()));
+        log( "Biggest contour found with size: " + std::to_string(biggestContour.size()));
         return biggestContour;
     }
 
+
+    cv::Mat redRatioMask(const cv::Mat &image) {
+
+        // --- Convert to float ---
+        cv::Mat imgFloat;
+        image.convertTo(imgFloat, CV_32FC3);
+
+        std::vector<cv::Mat> bgr;
+        cv::split(imgFloat, bgr);
+
+        cv::Mat B = bgr[0];
+        cv::Mat G = bgr[1];
+        cv::Mat R = bgr[2];
+
+        // --- Red ratio ---
+        cv::Mat sum = R + G + B;
+        cv::Mat redRatio;
+        cv::divide(R, sum + 1e-6, redRatio);  // safe divide
+
+        // --- Saturation from HSV ---
+        cv::Mat hsv;
+        cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
+
+        std::vector<cv::Mat> hsvChannels;
+        cv::split(hsv, hsvChannels);
+        cv::Mat saturation = hsvChannels[1];  // 0–255
+
+        // --- Thresholds ---
+        float redThreshold = 0.6f;     // tweak this
+        int satThreshold = 80;         // tweak this
+
+        cv::Mat redMask = redRatio > redThreshold;
+        cv::Mat satMask = saturation > satThreshold;
+
+        cv::Mat finalMask = redMask & satMask;
+
+        finalMask.convertTo(finalMask, CV_8U, 255);
+        return finalMask;
+    }
     cv::Mat getImpactsMask(const cv::Mat &image) {
-        const auto start = std::chrono::high_resolution_clock::now();
-        cv::Mat hsv, mask;
-        cvtColor(image, hsv, cv::COLOR_BGR2HSV);
+        cv::Mat normalized;
+        cv::Mat lab;
+        cv::cvtColor(image, lab, cv::COLOR_BGR2Lab);
 
-        std::vector<cv::Mat> channels(3);
-        split(hsv, channels);
-        const cv::Mat &saturation = channels[1];
+        std::vector<cv::Mat> labChannels;
+        cv::split(lab, labChannels);
 
-        double minVal, maxVal;
-        cv::minMaxLoc(saturation, &minVal, &maxVal);
+        // CLAHE on L channel
+        cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(2.0, cv::Size(8,8));
+        clahe->apply(labChannels[0], labChannels[0]);
 
-        maxVal = std::max(maxVal, 120.0);
-        minVal = (maxVal - minVal) * 0.5 + minVal;
+        cv::merge(labChannels, lab);
+        // cv::imshow("lab", lab);
+        cv::cvtColor(lab, normalized, cv::COLOR_Lab2BGR);
+        // cv::imshow("normalized", normalized);
+        cv::Mat hsv;
+        cv::cvtColor(normalized, hsv, cv::COLOR_BGR2HSV);
 
-        cv::inRange(saturation, cv::Scalar(minVal), cv::Scalar(maxVal), mask);
+        // cv::imshow("hsv", hsv);
 
-        cv::Mat element;
-        cv::erode(mask, mask, element, cv::Point(-1, -1), 2);
-        cv::dilate(mask, mask, element, cv::Point(-1, -1), 2);
+        cv::Mat mask1, mask2, redMask;
 
-        threshold(mask, mask, 127, 255, cv::THRESH_BINARY);
+        // lower red
+        cv::inRange(hsv,
+                    cv::Scalar(0, 80, 80),
+                    cv::Scalar(10, 255, 255),
+                    mask1);
 
-        std::vector<std::vector<cv::Point> > contours;
-        cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+        // cv::imshow("mask1", mask1);
 
-        cv::Mat result = cv::Mat::zeros(mask.size(), mask.type());
-        std::vector<cv::Point> ellipsePoints;
-        ellipsePoints.reserve(90);
-        const float kMinEllipseAxis = image.cols * 0.015f;
-        for (const auto &contour: contours) {
-            if (contour.size() >= 5) {
-                const cv::RotatedRect ellipse = cv::fitEllipse(contour);
-                if (ellipse.size.width < kMinEllipseAxis || ellipse.size.height < kMinEllipseAxis)
-                    continue;
-                ellipsePoints.clear();
-                cv::ellipse2Poly(ellipse.center, cv::Size2f(ellipse.size.width * 0.5f, ellipse.size.height * 0.5f),
-                                 static_cast<int>(ellipse.angle), 0, 360, 4, ellipsePoints);
-                cv::fillConvexPoly(result, ellipsePoints, cv::Scalar(255));
-            }
+        // upper red
+        cv::inRange(hsv,
+                    cv::Scalar(170, 80, 80),
+                    cv::Scalar(180, 255, 255),
+                    mask2);
+
+        // cv::imshow("mask2", mask2);
+
+        cv::bitwise_or(mask1, mask2, redMask);
+
+        // cv::imshow("redMask", redMask);
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, {5,5});
+        cv::morphologyEx(redMask, redMask, cv::MORPH_OPEN, kernel);
+        cv::morphologyEx(redMask, redMask, cv::MORPH_CLOSE, kernel);
+        std::vector<std::vector<cv::Point>> contours;
+        // cv::imshow("redMaskMorph", redMask);
+        cv::findContours(redMask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+        cv::Mat result = cv::Mat::zeros(redMask.size(), CV_8UC1);
+
+        const double minArea = image.cols * image.rows * 0.00005;
+        const double maxArea = image.cols * image.rows * 0.01;
+
+        for (const auto& contour : contours)
+        {
+            double area = cv::contourArea(contour);
+            if (area < minArea || area > maxArea)
+                continue;
+
+            double perimeter = cv::arcLength(contour, true);
+            if (perimeter == 0)
+                continue;
+
+            double circularity = 4 * CV_PI * area / (perimeter * perimeter);
+
+            if (circularity < 0.6)  // keep round shapes
+                continue;
+
+            cv::drawContours(result, std::vector<std::vector<cv::Point>>{contour},
+                             -1, cv::Scalar(255), cv::FILLED);
         }
 
-        const auto end = std::chrono::high_resolution_clock::now();
-        const std::chrono::duration<double> elapsed = end - start;
-        subvision::log("Temps écoulé pour getImpactsMask: " + std::to_string(elapsed.count()) + " secondes");
         return result;
     }
 
     std::vector<cv::Point2f> getImpactsCoordinates(const cv::Mat &image) {
+		log("getImpactsCoordinates");
         const auto start = std::chrono::high_resolution_clock::now();
         const cv::Mat mask = getImpactsMask(image);
-
         std::vector<std::vector<cv::Point> > contours;
         findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
@@ -148,11 +215,12 @@ namespace subvision {
         }
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        subvision::log("Temps écoulé pour getImpactsCoordinates: " + std::to_string(elapsed.count()) + " secondes");
+        log("Temps écoulé pour getImpactsCoordinates: " + std::to_string(elapsed.count()) + " secondes");
         return centers;
     }
 
     cv::Mat getColorMask(const cv::Mat &mat, const cv::Scalar &color) {
+		log("getColorMask");
         const cv::Mat colorMat(1, 1, CV_8UC3, color);
         cv::Mat hsv;
         cvtColor(colorMat, hsv, cv::COLOR_RGB2HSV);
@@ -176,6 +244,7 @@ namespace subvision {
     }
 
     Ellipse retrieveEllipse(const cv::Mat &image) {
+		log("retrieveEllipse");
         const auto start = std::chrono::high_resolution_clock::now();
         std::vector<std::vector<cv::Point> > contours;
         findContours(image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
@@ -197,7 +266,7 @@ namespace subvision {
             const cv::RotatedRect rotatedRect = fitEllipse(biggestContour);
             const auto end = std::chrono::high_resolution_clock::now();
             const std::chrono::duration<double> elapsed = end - start;
-            subvision::log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
+            log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
             return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
         }
 
@@ -211,13 +280,13 @@ namespace subvision {
             const cv::RotatedRect rotatedRect = fitEllipse(ptsEdges);
             const auto end = std::chrono::high_resolution_clock::now();
             const std::chrono::duration<double> elapsed = end - start;
-            subvision::log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
+            log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
             return std::make_tuple(rotatedRect.center, rotatedRect.size, rotatedRect.angle);
         }
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        subvision::log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
+        log("Temps écoulé pour retrieveEllipse: " + std::to_string(elapsed.count()) + " secondes");
         return emptyEllipse;
     }
 }

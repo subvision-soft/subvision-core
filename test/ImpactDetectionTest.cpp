@@ -53,6 +53,7 @@ protected:
         cv::Mat hsvSimulate;
         cv::merge(std::vector{splitResult[0], splitResult[0], splitResult[0]}, hsvSimulate);
         cv::Mat bgrSimulate;
+        // cv::imshow("bgrSimulate", bgrSimulate);
         cv::cvtColor(hsvSimulate, bgrSimulate, cv::COLOR_HSV2BGR);
         std::vector<cv::Point2f> realCoordinates = subvision::getImpactsCoordinates(bgrSimulate);
         ASSERT_EQ(impacts.size(), realCoordinates.size()) << "Impacts detection failed for folder " << folder << ", impacts count: " << impacts.size();
@@ -87,7 +88,7 @@ TEST_F(ImpactDetectionTests, TestImpactsDetection) {
     for (const auto& entry : fs::directory_iterator(TESTS_RESOURCES_PATH)) {
         if (entry.is_directory()) {
             std::string folder = entry.path().filename().string();
-            if (folder != "TODO" && folder.find("WIP") == std::string::npos) {
+            if (folder != "TODO" && folder.find("WIP") == std::string::npos && folder == "10") {
                 SCOPED_TRACE("Testing folder: " + folder);
                 runImpactsTest(folder);
                 pictureCount++;

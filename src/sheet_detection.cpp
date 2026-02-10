@@ -17,6 +17,7 @@ namespace subvision {
 
 
     std::vector<Point2f> getSheetCoordinates(const Mat& sheet_mat) {
+        log("getSheetCoordinates");
         const auto start = std::chrono::high_resolution_clock::now();
         Mat mat_resized;
         resize(sheet_mat, mat_resized, Size(PICTURE_WIDTH_SHEET_DETECTION, PICTURE_HEIGHT_SHEET_DETECTION));
@@ -37,34 +38,36 @@ namespace subvision {
         Mat mask;
         inRange(light, cv::Scalar(minVal), cv::Scalar(maxVal), mask);
 
-        subvision::log("Start find contours");
+        log("Start find contours");
         std::vector<std::vector<cv::Point>> contours;
         findContours(mask, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-        subvision::log("End find contours");
+        log("End find contours");
 
         const auto biggest = getBiggestValidContour(contours);
-        subvision::log("Biggest contour size: " + std::to_string(biggest.size()));
+        log("Biggest contour size: " + std::to_string(biggest.size()));
 
         if (biggest.empty()) {
-            subvision::log("No valid contour found");
+            log("No valid contour found");
             throw std::runtime_error("No valid contour found");
         }
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        subvision::log("Temps écoulé pour getSheetCoordinates: " + std::to_string(elapsed.count()) + " secondes");
+        log("Temps écoulé pour getSheetCoordinates: " + std::to_string(elapsed.count()) + " secondes");
 
         return coordinatesToPercentage(biggest, PICTURE_WIDTH_SHEET_DETECTION, PICTURE_HEIGHT_SHEET_DETECTION);
     }
 
     // Recadrage du plastron à partir de l'image initiale
     Mat getSheetPicture(const Mat& image) {
+        log("getSheetPicture");
         const auto coordinates = getSheetCoordinates(image);
         return getSheetPictureManually(image, coordinates);
     }
 
     // Recadrage manuel du plastron à partir de l'image initiale
     Mat getSheetPictureManually(const Mat& image,const std::vector<Point2f> coordinates){
+        log("getSheetPictureManually");
         if (coordinates.empty()) {
             throw std::runtime_error("Sheet coordinates not found");
         }

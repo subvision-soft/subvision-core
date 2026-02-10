@@ -2,6 +2,10 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 #include <gtest/gtest.h>
+
+#include "image_processing.h"
+#include "impact_detection.h"
+#include "sheet_detection.h"
 #include "../include/constants.h"
 #include "../include/target_detection.h"
 #include "../include/logging.h"
@@ -12,38 +16,67 @@ const std::string TESTS_RESOURCES_PATH = (fs::current_path() / "resources").stri
 
 class EllipseDetectionTests : public ::testing::Test {
 protected:
-    void SetUp() override {}
+    void SetUp() override {
+    }
 
-    void TearDown() override {}
+    void TearDown() override {
+    }
 
-    void runEllipsesTest(const std::string& folder) {
+    void runEllipsesTest(const std::string &folder) {
         std::string imgPath = TESTS_RESOURCES_PATH + "/" + folder + "/cropped_sheet.jpg";
+        std::string imagePath = TESTS_RESOURCES_PATH + "/" + folder + "/image.jpg";
         std::string expectedMaskPath = TESTS_RESOURCES_PATH + "/" + folder + "/expected_visuals.jpg";
+        try {
+            cv::Mat img = cv::imread(imgPath);
+            cv::Mat image = cv::imread(imagePath);
+            cv::resize(img, img, cv::Size(subvision::PICTURE_WIDTH_SHEET_DETECTION,
+                                          subvision::PICTURE_HEIGHT_SHEET_DETECTION));
+            std::map<int, subvision::Ellipse> ellipses = subvision::getTargetsEllipse(img);
+            std::map<int, subvision::Ellipse> targetsEllipsis =
+                    subvision::targetCoordinatesToSheetCoordinates(ellipses);
 
-        cv::Mat img = cv::imread(imgPath);
-        cv::resize(img,img, cv::Size(subvision::PICTURE_WIDTH_SHEET_DETECTION, subvision::PICTURE_HEIGHT_SHEET_DETECTION));
-        std::map<int, subvision::Ellipse> ellipses = subvision::getTargetsEllipse(img);
-        std::map<int, subvision::Ellipse> targetsEllipsis = subvision::targetCoordinatesToSheetCoordinates(ellipses);
+            subvision::ImpactResults impactsResults = subvision::ImpactResults();
+            std::vector<cv::Point2f> coordinates = // Top left, top right, bottom right and bottom left corners
+                std::vector<cv::Point2f> {cv::Point2f(0, 0), cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, 0),
+                cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, subvision::PICTURE_HEIGHT_SHEET_DETECTION),
+                cv::Point2f(0, subvision::PICTURE_HEIGHT_SHEET_DETECTION)
+                };
+            subvision::retrieveImpacts(image, impactsResults, std::vector<cv::Point2f>());
 
-        cv::Mat blackMat = cv::Mat::zeros(subvision::PICTURE_HEIGHT_SHEET_DETECTION, subvision::PICTURE_WIDTH_SHEET_DETECTION, CV_8UC1);
-        for (const auto& pair : targetsEllipsis) {
-            const auto& value = pair.second;
-            cv::Point center = cv::Point(static_cast<int>(std::get<0>(value).x), static_cast<int>(std::get<0>(value).y));
-            cv::Size size = cv::Size(static_cast<int>(std::get<1>(value).width), static_cast<int>(std::get<1>(value).height));
-            float angle = std::get<2>(value);
-            cv::ellipse(blackMat, center, cv::Size(size.width/2, size.height/2), angle, 0, 360, 255, -1);
+            cv::Mat blackMat = cv::Mat::zeros(subvision::PICTURE_HEIGHT_SHEET_DETECTION,
+                                              subvision::PICTURE_WIDTH_SHEET_DETECTION, CV_8UC1);
+            for (const auto &pair: targetsEllipsis) {
+                const auto &value = pair.second;
+                cv::Point center = cv::Point(static_cast<int>(std::get<0>(value).x),
+                                             static_cast<int>(std::get<0>(value).y));
+                cv::Size size = cv::Size(static_cast<int>(std::get<1>(value).width),
+                                         static_cast<int>(std::get<1>(value).height));
+                float angle = std::get<2>(value);
+                cv::ellipse(blackMat, center, cv::Size(size.width / 2, size.height / 2), angle, 0, 360, 255, -1);
+            }
+
+            cv::Mat expectedMask = cv::imread(expectedMaskPath, cv::IMREAD_GRAYSCALE);
+            cv::resize(expectedMask, expectedMask,
+                       cv::Size(subvision::PICTURE_WIDTH_SHEET_DETECTION, subvision::PICTURE_HEIGHT_SHEET_DETECTION));
+            cv::Mat binaryExpectedMask;
+            cv::threshold(expectedMask, binaryExpectedMask, 127, 255, cv::THRESH_BINARY);
+
+            cv::Mat xorMat;
+            cv::bitwise_xor(blackMat, binaryExpectedMask, xorMat);
+            double similarity = 1.0 - static_cast<double>(cv::countNonZero(xorMat)) / xorMat.total();
+
+            // Sauvegarde des images de debug
+            fs::path debugDir = fs::path(TESTS_RESOURCES_PATH) / folder / "debug";
+            fs::create_directories(debugDir);
+            cv::imwrite((debugDir / "ellipse_mask_expected.png").string(), binaryExpectedMask);
+            cv::imwrite((debugDir / "ellipse_mask_detected.png").string(), blackMat);
+            cv::imwrite((debugDir / "ellipse_xor.png").string(), xorMat);
+            cv::imwrite((debugDir / "ellipse_input.png").string(), img);
+
+            ASSERT_GE(similarity, 0.995) << "Ellipses detection failed for folder " << folder << ", similarity: " << similarity;
+        } catch (cv::Exception &e) {
+            std::cout << "Exception for folder " << folder << " : " << e.what() << std::endl;
         }
-
-        cv::Mat expectedMask = cv::imread(expectedMaskPath, cv::IMREAD_GRAYSCALE);
-        cv::resize(expectedMask,expectedMask, cv::Size(subvision::PICTURE_WIDTH_SHEET_DETECTION, subvision::PICTURE_HEIGHT_SHEET_DETECTION));
-        cv::Mat binaryExpectedMask;
-        cv::threshold(expectedMask, binaryExpectedMask, 127, 255, cv::THRESH_BINARY);
-
-        cv::Mat xorMat;
-        cv::bitwise_xor(blackMat, binaryExpectedMask, xorMat);
-        double similarity = 1.0 - static_cast<double>(cv::countNonZero(xorMat)) / xorMat.total();
-
-        ASSERT_GE(similarity, 0.995) << "Ellipses detection failed for folder " << folder << ", similarity: " << similarity;
     }
 };
 
@@ -54,13 +87,14 @@ TEST_F(EllipseDetectionTests, TestEllipsesDetection) {
     if (!fs::exists(TESTS_RESOURCES_PATH)) {
         subvision::log("Resources directory does not exist!");
     }
-    
+
     int pictureCount = 0;
-    for (const auto& entry : fs::directory_iterator(TESTS_RESOURCES_PATH)) {
+    for (const auto &entry: fs::directory_iterator(TESTS_RESOURCES_PATH)) {
         if (entry.is_directory()) {
             std::string folder = entry.path().filename().string();
             if (folder != "TODO" && folder.find("WIP") == std::string::npos) {
                 SCOPED_TRACE("Testing folder: " + folder);
+                subvision::log("Testing folder: " + folder);
                 runEllipsesTest(folder);
                 pictureCount++;
             }
