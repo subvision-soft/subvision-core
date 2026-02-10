@@ -41,7 +41,7 @@ namespace subvision {
 
             const Ellipse targetEllipsis = growEllipse(targetsEllipsis.at(closestZone), 1.8f);
             const cv::Point center = tupleIntCast(std::get<0>(targetEllipsis));
-            const float radAngle = getAngle(impact, center);
+            const float radAngle = getAngle(center,impact );
             const cv::Point2f pointOnEllipse = getPointOnEllipse(targetEllipsis, toDegrees(radAngle));
             const cv::Point pointOnEllipseInt = tupleIntCast(pointOnEllipse);
             const cv::Point impactInt = tupleIntCast(impact);
@@ -106,7 +106,7 @@ namespace subvision {
             const std::vector<Impact> points = drawAndGetImpactsPoints(impactsCoordinates, sheetMat, targetsEllipsis);
 
             // Set results
-            results.annotatedImage = sheetMat; // Assign the encoded string
+            results.annotatedImage = sheetMat;
             results.impacts = points;
         } catch (const std::exception &e) {
             log(e.what());

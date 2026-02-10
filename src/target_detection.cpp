@@ -214,9 +214,9 @@ namespace subvision {
                     angleGrandBlanc, 0, 360, targetColor, drawingWidth);
 
             const cv::Point2f topPoint = getPointOnEllipse(ellipseCrossTip, 0  );
-            const cv::Point2f bottomPoint = getPointOnEllipse(ellipseCrossTip, 90);
-            const cv::Point2f leftPoint = getPointOnEllipse(ellipseCrossTip, 180);
-            const cv::Point2f rightPoint = getPointOnEllipse(ellipseCrossTip, 270);
+            const cv::Point2f bottomPoint = getPointOnEllipse(ellipseCrossTip, 180);
+            const cv::Point2f leftPoint = getPointOnEllipse(ellipseCrossTip, 270);
+            const cv::Point2f rightPoint = getPointOnEllipse(ellipseCrossTip, 90);
 
             line(sheetMat, tupleIntCast(topPoint), tupleIntCast(bottomPoint), targetColor, drawingWidth);
             line(sheetMat, tupleIntCast(leftPoint), tupleIntCast(rightPoint), targetColor, drawingWidth);
