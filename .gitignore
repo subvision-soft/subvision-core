@@ -4,3 +4,8 @@
 .vscode/
 .idea
 /build-dotnet-x64
+
+# Generated documentation output
+docs/cpp/html/
+docs/_site/
+docs/api/
