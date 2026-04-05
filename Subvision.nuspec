@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>SubvisionNET</id>
+    <version>$version$</version>
+    <title>Subvision CV .NET Wrapper</title>
+    <authors>Subvision</authors>
+    <description>
+      .NET wrapper for the Subvision CV native library.
+      Provides impact detection and sheet coordinate extraction for
+      underwater target shooting sheet analysis.
+      Includes native binaries for Windows x64 and ARM64.
+    </description>
+    <tags>opencv computer-vision image-processing native interop</tags>
+    <license type="file">LICENSE</license>
+    <readme>docs\README.md</readme>
+  </metadata>
+  <files>
+    <!-- x64 native binaries -->
+    <file src="runtimes\win-x64\native\subvision-x64.dll"
+          target="runtimes\win-x64\native" />
+    <file src="runtimes\win-x64\native\opencv_world4110.dll"
+          target="runtimes\win-x64\native" />
+
+    <!-- ARM64 native binaries -->
+    <file src="runtimes\win-arm64\native\subvision-arm64.dll"
+          target="runtimes\win-arm64\native" />
+    <file src="runtimes\win-arm64\native\opencv_world4110.dll"
+          target="runtimes\win-arm64\native" />
+
+    <!-- MSBuild targets for auto-copy at build time -->
+    <file src="Subvision.targets"
+          target="build\net472\SubvisionNET.targets" />
+    <file src="Subvision.targets"
+          target="buildTransitive\net472\SubvisionNET.targets" />
+
+    <!-- License -->
+    <file src="..\LICENSE" target="LICENSE" />
+  </files>
+</package>

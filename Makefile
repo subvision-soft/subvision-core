@@ -68,26 +68,80 @@ subvision_es6: $(OUTPUT_DIR)
 	cp web/index.html $(OUTPUT_DIR)/
 	@echo "Subvision compilé avec succès. Les fichiers sont dans $(OUTPUT_DIR)/"
 	
-# Makefile (extrait) — correction pour la cible `subvision_dotnet`
-subvision_dotnet:
-	@echo "Compilation du wrapper .NET (C++/CLI)..."
+# --- .NET wrapper builds ---
+
+# Build x64 wrapper
+subvision_dotnet: subvision_dotnet_x64
+
+subvision_dotnet_x64:
+	@echo "Building .NET wrapper (x64)..."
 ifeq ($(OS),Windows_NT)
 	@if not exist build-dotnet-x64 mkdir build-dotnet-x64
 	@cd build-dotnet-x64 && cmake -G "Visual Studio 17 2022" -A x64 -DBUILD_CLI_WRAPPER=ON ..
 	@cmake --build build-dotnet-x64 --config Release
 else
-	@mkdir -p build-dotnet-x64
-	@cd build-dotnet-x64 && cmake -DBUILD_CLI_WRAPPER=ON ..
-	@cmake --build build-dotnet-x64 --config Release -- -j$(nproc)
+	@echo "C++/CLI wrapper requires Windows with MSVC"
+	@exit 1
 endif
-	@echo "Artifacts disponibles dans build-dotnet-x64/bin/"
+	@echo "x64 artifacts in build-dotnet-x64/bin/x64/Release/"
+
+# Build ARM64 wrapper
+subvision_dotnet_arm64:
+	@echo "Building .NET wrapper (ARM64)..."
+ifeq ($(OS),Windows_NT)
+	@if not exist build-dotnet-arm64 mkdir build-dotnet-arm64
+	@cd build-dotnet-arm64 && cmake -G "Visual Studio 17 2022" -A ARM64 -DBUILD_CLI_WRAPPER=ON ..
+	@cmake --build build-dotnet-arm64 --config Release
+else
+	@echo "C++/CLI wrapper requires Windows with MSVC"
+	@exit 1
+endif
+	@echo "ARM64 artifacts in build-dotnet-arm64/bin/arm64/Release/"
+
+# Build all architectures
+subvision_dotnet_all: subvision_dotnet_x64 subvision_dotnet_arm64
+	@echo "All .NET wrapper architectures built successfully."
+
+# Package into NuGet
+subvision_nuget: subvision_dotnet_all
+	@echo "Creating NuGet package..."
+ifeq ($(OS),Windows_NT)
+	@if not exist nupkg mkdir nupkg
+	@if not exist nupkg\runtimes\win-x64\native mkdir nupkg\runtimes\win-x64\native
+	@if not exist nupkg\runtimes\win-arm64\native mkdir nupkg\runtimes\win-arm64\native
+	@copy build-dotnet-x64\bin\x64\Release\subvision-x64.dll nupkg\runtimes\win-x64\native\
+	@copy build-dotnet-x64\bin\x64\Release\opencv_world4110.dll nupkg\runtimes\win-x64\native\
+	@copy build-dotnet-arm64\bin\arm64\Release\subvision-arm64.dll nupkg\runtimes\win-arm64\native\
+	@copy build-dotnet-arm64\bin\arm64\Release\opencv_world4110.dll nupkg\runtimes\win-arm64\native\
+	@copy Subvision.nuspec nupkg\
+	@copy Subvision.targets nupkg\
+	nuget pack nupkg\Subvision.nuspec -OutputDirectory nupkg
+endif
+	@echo "NuGet package created in nupkg/"
+
+# Clean dotnet builds
+clean_dotnet:
+	@echo "Cleaning .NET build directories..."
+ifeq ($(OS),Windows_NT)
+	@if exist build-dotnet-x64 rmdir /s /q build-dotnet-x64
+	@if exist build-dotnet-arm64 rmdir /s /q build-dotnet-arm64
+	@if exist nupkg rmdir /s /q nupkg
+endif
+	@echo "Clean complete."
 
 # Aide
 help:
 	@echo "Makefile pour compiler Subvision avec Emscripten via Docker"
 	@echo ""
 	@echo "Cibles disponibles:"
-	@echo "  all               : Compile le projet complet (Subvision et Subvision ES6)"
-	@echo "  subvision         : Compile l'application Subvision complète"
-	@echo "  subvision_es6     : Compile l'application Subvision en mode ES6"
-	@echo "  help              : Affiche cette aide"
+	@echo "  all                    : Compile le projet complet (Subvision et Subvision ES6)"
+	@echo "  subvision              : Compile l'application Subvision complète"
+	@echo "  subvision_es6          : Compile l'application Subvision en mode ES6"
+	@echo "  subvision_dotnet       : Build .NET wrapper (x64, alias for subvision_dotnet_x64)"
+	@echo "  subvision_dotnet_x64   : Build .NET wrapper for x64"
+	@echo "  subvision_dotnet_arm64 : Build .NET wrapper for ARM64"
+	@echo "  subvision_dotnet_all   : Build .NET wrapper for all architectures"
+	@echo "  subvision_nuget        : Build all + create NuGet package"
+	@echo "  clean_dotnet           : Clean all .NET build directories"
+	@echo "  help                   : Affiche cette aide"
+

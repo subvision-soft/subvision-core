@@ -60,6 +60,24 @@ endif ()
 if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
     # C++/CLI requires MSVC
     if (MSVC)
+        # --- Architecture detection (x64, ARM64, x86) ---
+        if (CMAKE_GENERATOR_PLATFORM)
+            string(TOUPPER "${CMAKE_GENERATOR_PLATFORM}" _PLAT)
+        elseif (CMAKE_VS_PLATFORM_NAME)
+            string(TOUPPER "${CMAKE_VS_PLATFORM_NAME}" _PLAT)
+        else ()
+            string(TOUPPER "${CMAKE_SYSTEM_PROCESSOR}" _PLAT)
+        endif ()
+
+        if (_PLAT MATCHES "ARM64")
+            set(ARCH_SUFFIX "arm64")
+        elseif (_PLAT MATCHES "X64" OR _PLAT MATCHES "AMD64" OR CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(ARCH_SUFFIX "x64")
+        else ()
+            set(ARCH_SUFFIX "x86")
+        endif ()
+        message(STATUS "Building C++/CLI wrapper for architecture: ${ARCH_SUFFIX}")
+
         # Create the C++/CLI wrapper library (only compile the wrapper with /clr)
         add_library(Subvision SHARED cli_wrapper.cpp)
         target_include_directories(Subvision PUBLIC ${CMAKE_SOURCE_DIR}/include)
@@ -82,17 +100,45 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
                 /std:c++17  # C++/CLI works best with C++17
         )
 
-        # Set output name with architecture suffix
-        if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set(ARCH_SUFFIX "x64")
-        else ()
-            set(ARCH_SUFFIX "x86")
-        endif ()
+        # NOTE: C++/CLI (/clr) requires dynamic CRT (/MD). Static CRT (/MT) is NOT
+        # compatible. The VC++ Redistributable is required on target machines, but it
+        # is already installed on the vast majority of Windows machines.
 
+        # Set output name with architecture suffix
         set_target_properties(Subvision PROPERTIES
                 OUTPUT_NAME "subvision-${ARCH_SUFFIX}"
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${ARCH_SUFFIX}"
         )
+
+        # --- Post-build: copy OpenCV DLLs next to the wrapper for distribution ---
+        # OpenCV_DIR is set by find_package(OpenCV) — typically points to
+        # C:/tools/opencv/build/x64/vc16/lib (or similar).
+        # The bin directory with DLLs is a sibling: .../x64/vc16/bin
+        get_filename_component(_OPENCV_BIN_DIR "${OpenCV_DIR}/../bin" ABSOLUTE)
+        if (NOT EXISTS "${_OPENCV_BIN_DIR}")
+            # Fallback: try two levels up from OpenCV_DIR
+            get_filename_component(_OPENCV_BIN_DIR "${OpenCV_DIR}/../../x64/vc16/bin" ABSOLUTE)
+        endif ()
+        if (NOT EXISTS "${_OPENCV_BIN_DIR}")
+            # Last resort: hardcoded choco path
+            set(_OPENCV_BIN_DIR "C:/tools/opencv/build/x64/vc16/bin")
+        endif ()
+
+        if (EXISTS "${_OPENCV_BIN_DIR}/opencv_world4110.dll")
+            message(STATUS "OpenCV bin directory: ${_OPENCV_BIN_DIR}")
+            add_custom_command(TARGET Subvision POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E echo "Copying OpenCV DLLs to output directory..."
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${_OPENCV_BIN_DIR}/opencv_world4110.dll"
+                    "$<TARGET_FILE_DIR:Subvision>/"
+                    COMMAND ${CMAKE_COMMAND} -E echo "OpenCV DLLs copied successfully."
+                    COMMENT "Bundling OpenCV DLLs with Subvision wrapper"
+                    VERBATIM
+            )
+        else ()
+            message(WARNING "Could not find opencv_world4110.dll in ${_OPENCV_BIN_DIR}. "
+                    "You will need to manually place it next to subvision-${ARCH_SUFFIX}.dll")
+        endif ()
     else ()
         message(WARNING "C++/CLI wrapper requires MSVC compiler")
     endif ()

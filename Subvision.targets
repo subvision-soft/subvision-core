@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSBuild targets for SubvisionNET NuGet package.
+  Automatically copies the correct architecture's native DLLs to the
+  output directory at build time.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Determine the runtime identifier based on the current platform.
+    For "AnyCPU" builds we check the OS architecture at build time.
+  -->
+  <PropertyGroup>
+    <_SubvisionRID Condition="'$(PlatformTarget)' == 'ARM64' OR '$(RuntimeIdentifier)' == 'win-arm64'">win-arm64</_SubvisionRID>
+    <_SubvisionRID Condition="'$(_SubvisionRID)' == '' AND ('$(PlatformTarget)' == 'x64' OR '$(RuntimeIdentifier)' == 'win-x64')">win-x64</_SubvisionRID>
+    <!-- Default to x64 for AnyCPU when no RID is specified -->
+    <_SubvisionRID Condition="'$(_SubvisionRID)' == ''">win-x64</_SubvisionRID>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Copy native DLLs to output directory -->
+    <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\$(_SubvisionRID)\native\*.dll"
+          Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\$(_SubvisionRID)\native\')"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="%(Filename)%(Extension)"
+          Visible="false" />
+  </ItemGroup>
+
+</Project>

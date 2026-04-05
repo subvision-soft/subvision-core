@@ -57,6 +57,18 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+    strategy:
+      matrix:
+        arch: [x64, ARM64]
+        include:
+          - arch: x64
+            cmake_arch: x64
+            rid: win-x64
+            suffix: x64
+          - arch: ARM64
+            cmake_arch: ARM64
+            rid: win-arm64
+            suffix: arm64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -69,23 +81,78 @@ jobs:
           choco install opencv -y
           echo "OpenCV_DIR=C:\tools\opencv\build" >> $env:GITHUB_ENV
 
-      - name: Build C++/CLI .NET Library (x64)
+      - name: Build C++/CLI .NET Library (${{ matrix.arch }})
         run: |
-          mkdir build-dotnet-x64
-          cd build-dotnet-x64
-          cmake -G "Visual Studio 17 2022" -A x64 -DBUILD_CLI_WRAPPER=ON ..
+          mkdir build-dotnet-${{ matrix.suffix }}
+          cd build-dotnet-${{ matrix.suffix }}
+          cmake -G "Visual Studio 17 2022" -A ${{ matrix.cmake_arch }} -DBUILD_CLI_WRAPPER=ON ..
           cmake --build . --config Release
 
-      - name: Upload .NET artifacts
+      - name: Upload .NET artifacts (${{ matrix.arch }})
         uses: actions/upload-artifact@v4
         with:
-          name: dotnet-artifacts-x64
+          name: dotnet-artifacts-${{ matrix.suffix }}
           path: |
-            build-dotnet-x64/bin/**/*.dll
-            build-dotnet-x64/bin/**/*.pdb
+            build-dotnet-${{ matrix.suffix }}/bin/**/*.dll
+            build-dotnet-${{ matrix.suffix }}/bin/**/*.pdb
+
+  package-nuget:
+    needs: [build-dotnet]
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download x64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-artifacts-x64
+          path: ./nupkg/runtimes/win-x64/native
+
+      - name: Download ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-artifacts-arm64
+          path: ./nupkg/runtimes/win-arm64/native
+
+      - name: Flatten artifact directories
+        shell: pwsh
+        run: |
+          # Flatten nested bin/<arch>/Release/*.dll to runtimes/<rid>/native/
+          foreach ($rid in @("win-x64", "win-arm64")) {
+            $nativeDir = "./nupkg/runtimes/$rid/native"
+            Get-ChildItem -Path $nativeDir -Recurse -Filter "*.dll" | ForEach-Object {
+              if ($_.DirectoryName -ne (Resolve-Path $nativeDir).Path) {
+                Move-Item $_.FullName -Destination $nativeDir -Force
+              }
+            }
+            # Clean up empty subdirectories
+            Get-ChildItem -Path $nativeDir -Directory -Recurse | Sort-Object FullName -Descending | Remove-Item -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Get version
+        uses: reecetech/version-increment@2023.10.2
+        id: version
+        with:
+          scheme: calver
+          increment: patch
+
+      - name: Build NuGet package
+        shell: pwsh
+        run: |
+          Copy-Item Subvision.targets ./nupkg/
+          nuget pack Subvision.nuspec -OutputDirectory ./nupkg -Version ${{ steps.version.outputs.version }} -BasePath ./nupkg
+
+      - name: Upload NuGet package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ./nupkg/*.nupkg
 
   create-release:
-    needs: [ build-wasm, build-dotnet ]
+    needs: [ build-wasm, build-dotnet, package-nuget ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -113,7 +180,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dotnet-artifacts-x64
-          path: ./dotnet-artifacts
+          path: ./dotnet-artifacts-x64
+
+      - name: Download .NET ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-artifacts-arm64
+          path: ./dotnet-artifacts-arm64
+
+      - name: Download NuGet package
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: ./nuget-package
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -133,7 +212,9 @@ jobs:
           files: |
             wasm-artifacts/subvision.js
             wasm-artifacts/subvision.mjs
-            dotnet-artifacts/**/*.dll
+            dotnet-artifacts-x64/**/*.dll
+            dotnet-artifacts-arm64/**/*.dll
+            nuget-package/*.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
