@@ -12,6 +12,23 @@ on:
         required: false
 
 jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      pre-release-label: ${{ steps.version.outputs.pre-release-label }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get version
+        uses: reecetech/version-increment@2023.10.2
+        id: version
+        with:
+          scheme: calver
+          increment: patch
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -95,7 +112,7 @@ jobs:
             build-dotnet-${{ matrix.suffix }}/bin/**/*.pdb
 
   package-nuget:
-    needs: [build-dotnet]
+    needs: [build-dotnet, get-version]
     runs-on: windows-latest
     permissions:
       contents: write
@@ -124,18 +141,11 @@ jobs:
             Get-ChildItem -Path $nativeDir -Directory -Recurse | Sort-Object FullName -Descending | Remove-Item -Force -ErrorAction SilentlyContinue
           }
 
-      - name: Get version
-        uses: reecetech/version-increment@2023.10.2
-        id: version
-        with:
-          scheme: calver
-          increment: patch
-
       - name: Build NuGet package
         shell: pwsh
         run: |
           Copy-Item Subvision.targets ./nupkg/
-          nuget pack Subvision.nuspec -OutputDirectory ./nupkg -Version ${{ steps.version.outputs.version }} -BasePath ./nupkg
+          nuget pack Subvision.nuspec -OutputDirectory ./nupkg -Version ${{ needs.get-version.outputs.version }} -BasePath ./nupkg
 
       - name: Upload NuGet package
         uses: actions/upload-artifact@v4
@@ -144,7 +154,7 @@ jobs:
           path: ./nupkg/*.nupkg
 
   create-release:
-    needs: [ build-wasm, build-dotnet, package-nuget ]
+    needs: [ build-wasm, build-dotnet, package-nuget, get-version ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -152,15 +162,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Get next version
-        uses: reecetech/version-increment@2023.10.2
-        id: version
-        with:
-          scheme: calver
-          increment: patch
-
       - name: Print version
-        run: echo "Version is ${{ steps.version.outputs.version }}"
+        run: echo "Version is ${{ needs.get-version.outputs.version }}"
 
       - name: Download WASM artifacts
         uses: actions/download-artifact@v4
@@ -190,11 +193,11 @@ jobs:
             startsWith(github.ref, 'refs/heads/develop')
           )        
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ needs.get-version.outputs.version }}
+          name: ${{ needs.get-version.outputs.version }}
           body: ${{ inputs.release_notes }}
-          prerelease: ${{ steps.version.outputs.pre-release-label != '' }}
-          make_latest: ${{ steps.version.outputs.pre-release-label == '' }}
+          prerelease: ${{ needs.get-version.outputs.pre-release-label != '' }}
+          make_latest: ${{ needs.get-version.outputs.pre-release-label == '' }}
           files: |
             wasm-artifacts/subvision.js
             wasm-artifacts/subvision.mjs

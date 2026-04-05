@@ -33,7 +33,7 @@ $(OUTPUT_DIR):
 
 # Compilation de la bibliothèque et du binding WebAssembly
 $(OUTPUT_DIR)/subvision.js: $(OUTPUT_DIR)
-	docker run --rm -v $${PWD}:/src -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
+	docker run --rm -v "$(CURDIR):/src" -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
 		-I./include \
 		\`pkg-config --cflags --libs opencv4\` \
 		-o $(OUTPUT_DIR)/subvision.js \
@@ -47,7 +47,7 @@ $(OUTPUT_DIR)/index.html: $(OUTPUT_DIR) web/index.html
 # Compilation de l'application complète Subvision
 subvision: $(OUTPUT_DIR)
 	@echo "Compilation de Subvision..."
-	docker run --rm -v $${PWD}:/src -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
+	docker run --rm -v "$(CURDIR):/src" -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
 		-I./include \
 		\`pkg-config --cflags --libs opencv4\` \
 		-o $(OUTPUT_DIR)/subvision.js \
@@ -59,7 +59,7 @@ subvision: $(OUTPUT_DIR)
 # Compilation de l'application complète Subvision
 subvision_es6: $(OUTPUT_DIR)
 	@echo "Compilation de Subvision en mode ES6..."
-	docker run --rm -v $${PWD}:/src -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
+	docker run --rm -v "$(CURDIR):/src" -w /src $(DOCKER_IMAGE) bash -c "emcc $(LIB_SOURCES) emscripten_binding.cpp \
 		-I./include \
 		\`pkg-config --cflags --libs opencv4\` \
 		-o $(OUTPUT_DIR)/subvision.mjs \
@@ -108,11 +108,8 @@ subvision_nuget: subvision_dotnet_all
 ifeq ($(OS),Windows_NT)
 	@if not exist nupkg mkdir nupkg
 	@if not exist nupkg\runtimes\win-x64\native mkdir nupkg\runtimes\win-x64\native
-	@if not exist nupkg\runtimes\win-arm64\native mkdir nupkg\runtimes\win-arm64\native
 	@copy build-dotnet-x64\bin\x64\Release\subvision-x64.dll nupkg\runtimes\win-x64\native\
-	@copy build-dotnet-x64\bin\x64\Release\opencv_world4110.dll nupkg\runtimes\win-x64\native\
-	@copy build-dotnet-arm64\bin\arm64\Release\subvision-arm64.dll nupkg\runtimes\win-arm64\native\
-	@copy build-dotnet-arm64\bin\arm64\Release\opencv_world4110.dll nupkg\runtimes\win-arm64\native\
+	@copy build-dotnet-x64\bin\x64\Release\opencv_*.dll nupkg\runtimes\win-x64\native\
 	@copy Subvision.nuspec nupkg\
 	@copy Subvision.targets nupkg\
 	nuget pack nupkg\Subvision.nuspec -OutputDirectory nupkg

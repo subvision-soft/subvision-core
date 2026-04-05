@@ -19,14 +19,8 @@
     <!-- x64 native binaries -->
     <file src="runtimes\win-x64\native\subvision-x64.dll"
           target="runtimes\win-x64\native" />
-    <file src="runtimes\win-x64\native\opencv_world4110.dll"
+    <file src="runtimes\win-x64\native\opencv_*.dll"
           target="runtimes\win-x64\native" />
-
-    <!-- ARM64 native binaries -->
-    <file src="runtimes\win-arm64\native\subvision-arm64.dll"
-          target="runtimes\win-arm64\native" />
-    <file src="runtimes\win-arm64\native\opencv_world4110.dll"
-          target="runtimes\win-arm64\native" />
 
     <!-- MSBuild targets for auto-copy at build time -->
     <file src="Subvision.targets"
