@@ -89,15 +89,13 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
         set_target_properties(Subvision PROPERTIES
                 CXX_STANDARD 17
                 CXX_SCAN_FOR_MODULES OFF
-                COMMON_LANGUAGE_RUNTIME "true"
+                COMMON_LANGUAGE_RUNTIME ""
                 VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2"
         )
 
         # Enable C++/CLI only for the wrapper file
         target_compile_options(Subvision PRIVATE
-                /clr
-                /EHa  # Exception handling for C++/CLI
-                /std:c++17  # C++/CLI works best with C++17
+                /EHa  # Exception handling for C++/CLI (clr added via COMMON_LANGUAGE_RUNTIME)
         )
 
         # NOTE: C++/CLI (/clr) requires dynamic CRT (/MD). Static CRT (/MT) is NOT
@@ -111,33 +109,45 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
         )
 
         # --- Post-build: copy OpenCV DLLs next to the wrapper for distribution ---
-        # OpenCV_DIR is set by find_package(OpenCV) — typically points to
-        # C:/tools/opencv/build/x64/vc16/lib (or similar).
-        # The bin directory with DLLs is a sibling: .../x64/vc16/bin
-        get_filename_component(_OPENCV_BIN_DIR "${OpenCV_DIR}/../bin" ABSOLUTE)
-        if (NOT EXISTS "${_OPENCV_BIN_DIR}")
-            # Fallback: try two levels up from OpenCV_DIR
-            get_filename_component(_OPENCV_BIN_DIR "${OpenCV_DIR}/../../x64/vc16/bin" ABSOLUTE)
+        # OpenCV_DIR is set by find_package(OpenCV).
+        set(_OPENCV_BIN_DIR "")
+        
+        # 1. Try OpenCV_DIR / ARCH / RUNTIME / bin (typical for OpenCV root)
+        if (DEFINED OpenCV_ARCH AND DEFINED OpenCV_RUNTIME)
+            set(_TEST_DIR "${OpenCV_DIR}/${OpenCV_ARCH}/${OpenCV_RUNTIME}/bin")
+            if (EXISTS "${_TEST_DIR}")
+                set(_OPENCV_BIN_DIR "${_TEST_DIR}")
+            endif ()
         endif ()
-        if (NOT EXISTS "${_OPENCV_BIN_DIR}")
-            # Last resort: hardcoded choco path
+
+        # 2. Try OpenCV_DIR / ../bin (typical if OpenCV_DIR is in the lib folder)
+        if (NOT _OPENCV_BIN_DIR OR NOT EXISTS "${_OPENCV_BIN_DIR}")
+            get_filename_component(_TEST_DIR "${OpenCV_DIR}/../bin" ABSOLUTE)
+            if (EXISTS "${_TEST_DIR}")
+                set(_OPENCV_BIN_DIR "${_TEST_DIR}")
+            endif ()
+        endif ()
+
+        # 3. Fallback to standard choco path if everything else fails
+        if (NOT _OPENCV_BIN_DIR OR NOT EXISTS "${_OPENCV_BIN_DIR}")
             set(_OPENCV_BIN_DIR "C:/tools/opencv/build/x64/vc16/bin")
         endif ()
 
-        if (EXISTS "${_OPENCV_BIN_DIR}/opencv_world4110.dll")
-            message(STATUS "OpenCV bin directory: ${_OPENCV_BIN_DIR}")
+        file(GLOB OPENCV_DLLS "${_OPENCV_BIN_DIR}/opencv_*.dll")
+        if (OPENCV_DLLS)
+            message(STATUS "Found OpenCV DLLs in: ${_OPENCV_BIN_DIR}")
             add_custom_command(TARGET Subvision POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E echo "Copying OpenCV DLLs to output directory..."
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${_OPENCV_BIN_DIR}/opencv_world4110.dll"
+                    ${OPENCV_DLLS}
                     "$<TARGET_FILE_DIR:Subvision>/"
                     COMMAND ${CMAKE_COMMAND} -E echo "OpenCV DLLs copied successfully."
                     COMMENT "Bundling OpenCV DLLs with Subvision wrapper"
                     VERBATIM
             )
         else ()
-            message(WARNING "Could not find opencv_world4110.dll in ${_OPENCV_BIN_DIR}. "
-                    "You will need to manually place it next to subvision-${ARCH_SUFFIX}.dll")
+            message(WARNING "Could not find OpenCV DLLs (opencv_*.dll) in ${_OPENCV_BIN_DIR}. "
+                    "You will need to manually place the OpenCV binaries next to subvision-${ARCH_SUFFIX}.dll")
         endif ()
     else ()
         message(WARNING "C++/CLI wrapper requires MSVC compiler")
