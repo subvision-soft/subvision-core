@@ -10,6 +10,7 @@
 #include "image_processing.h"
 #include "utils.h"
 #include "../include/logging.h"
+#include "../include/logging.h"
 using namespace cv;
 namespace subvision {
 
