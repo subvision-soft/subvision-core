@@ -14,7 +14,7 @@ LIB_SOURCES = src/utils.cpp \
 			src/logging.cpp
 
 # Options de compilation emscripten
-EMCC_FLAGS = -O3 -std=c++20 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
+EMCC_FLAGS = -O3 -std=c++20 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s USE_ZLIB=1 \
 			-s MODULARIZE=1 -s ENVIRONMENT=web,worker \
 			-s DISABLE_EXCEPTION_CATCHING=0 -s SINGLE_FILE \
 			-s USE_ES6_IMPORT_META=0 -s NO_EXIT_RUNTIME=1 \
