@@ -1,6 +1,7 @@
 #include "../include/target_detection.h"
 
 #include <future>
+#include <vector>
 
 #include "../include/constants.h"
 #include "../include/logging.h"
