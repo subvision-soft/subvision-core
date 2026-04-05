@@ -24,6 +24,7 @@ It aims to be validated by the **FFESSM** (French Underwater Federation) for off
 ---
 
 ## 📁 Repository Structure
+
 ```
 ├── include/                # Header files
 ├── src/                    # C++ core source files
@@ -41,10 +42,12 @@ It aims to be validated by the **FFESSM** (French Underwater Federation) for off
 ## ⚙️ Prerequisites
 
 ### For WebAssembly Build:
+
 - [Docker](https://www.docker.com/)
 - Internet access to pull the image `ghcr.io/subvision-soft/subvision-emscripten:2025.6.1`
 
 ### For .NET Build:
+
 - Windows with Visual Studio 2022
 - CMake 3.30.5+
 - OpenCV 4.x (installed via chocolatey: `choco install opencv`)
@@ -102,6 +105,7 @@ cmake --build . --config Release
 ```
 
 The output will be:
+
 - `build-dotnet-x64\bin\x64\SubvisionNET-x64.dll` (64-bit)
 - `build-dotnet-x86\bin\x86\SubvisionNET-x86.dll` (32-bit)
 
@@ -133,10 +137,10 @@ cd test
 
 ### .NET
 
-| File                   | Description                              |
-|------------------------|------------------------------------------|
-| SubvisionNET-x64.dll   | .NET assembly for 64-bit applications    |
-| SubvisionNET-x86.dll   | .NET assembly for 32-bit applications    |
+| File                 | Description                           |
+|----------------------|---------------------------------------|
+| SubvisionNET-x64.dll | .NET assembly for 64-bit applications |
+| SubvisionNET-x86.dll | .NET assembly for 32-bit applications |
 
 ---
 
@@ -192,11 +196,11 @@ var coords = SubvisionCore.GetSheetCoordinates(imageData, width, height);
 
 ### CMake Options
 
-| Option              | Description                     | Default |
-|---------------------|---------------------------------|---------|
-| BUILD_TESTS         | Build unit tests                | ON      |
-| BUILD_CLI_WRAPPER   | Build C++/CLI .NET wrapper      | OFF     |
-| EMSCRIPTEN          | Build for WebAssembly           | OFF     |
+| Option            | Description                | Default |
+|-------------------|----------------------------|---------|
+| BUILD_TESTS       | Build unit tests           | ON      |
+| BUILD_CLI_WRAPPER | Build C++/CLI .NET wrapper | OFF     |
+| EMSCRIPTEN        | Build for WebAssembly      | OFF     |
 
 ## 📄 License
 

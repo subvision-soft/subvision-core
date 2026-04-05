@@ -16,6 +16,7 @@ resources/
 ```
 
 Chaque dossier de test doit contenir les fichiers suivants :
+
 - `cropped_sheet.jpg` : L'image d'entrée de la feuille de cible à analyser
 - `expected_impacts.jpg` : Image en noir et blanc où les zones blanches représentent les impacts attendus
 - `expected_visuals.jpg` : Image en noir et blanc où les zones blanches représentent les cibles visuelles attendues

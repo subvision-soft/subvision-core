@@ -38,10 +38,14 @@ namespace subvision {
     cv::Point2f getPointOnEllipse(const Ellipse &ellipse, const float angle) {
         const cv::Point2f &center = std::get<0>(ellipse);
         const cv::Size2f &radii = std::get<1>(ellipse);
-        const float x = center.x + cos(angle) * (radii.width / 2);
-        const float y = center.y + sin(angle) * (radii.height / 2);
-        return {x, y};
+        const float ellipseAngle = std::get<2>(ellipse);
+        const float localAngle = toRadians(angle - ellipseAngle);
+        const float x = center.x + cos(localAngle) * (radii.width / 2);
+        const float y = center.y + sin(localAngle) * (radii.height / 2);
+        return rotatePoint( center, {x, y}, toRadians(ellipseAngle));
     }
+
+
 
 
 
