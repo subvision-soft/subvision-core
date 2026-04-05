@@ -84,6 +84,7 @@ jobs:
 
       - name: Build C++/CLI .NET Library (${{ matrix.arch }})
         run: |
+          if (Test-Path build-dotnet-${{ matrix.suffix }}) { Remove-Item -Recurse -Force build-dotnet-${{ matrix.suffix }} }
           New-Item -ItemType Directory -Force -Path build-dotnet-${{ matrix.suffix }}
           cd build-dotnet-${{ matrix.suffix }}
           cmake -G "Visual Studio 17 2022" -A ${{ matrix.cmake_arch }} -DBUILD_CLI_WRAPPER=ON ..
