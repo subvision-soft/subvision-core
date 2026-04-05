@@ -28,7 +28,8 @@
     <file src="Subvision.targets"
           target="buildTransitive\net472\SubvisionNET.targets" />
 
-    <!-- License -->
+    <!-- Additional metadata dependencies -->
     <file src="..\LICENSE" target="LICENSE" />
+    <file src="..\README.md" target="docs\README.md" />
   </files>
 </package>
