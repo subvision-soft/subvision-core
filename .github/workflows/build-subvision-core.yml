@@ -60,16 +60,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64, ARM64]
+        arch: [x64]
         include:
           - arch: x64
             cmake_arch: x64
             rid: win-x64
             suffix: x64
-          - arch: ARM64
-            cmake_arch: ARM64
-            rid: win-arm64
-            suffix: arm64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -113,17 +109,11 @@ jobs:
           name: dotnet-artifacts-x64
           path: ./nupkg/runtimes/win-x64/native
 
-      - name: Download ARM64 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dotnet-artifacts-arm64
-          path: ./nupkg/runtimes/win-arm64/native
-
       - name: Flatten artifact directories
         shell: pwsh
         run: |
           # Flatten nested bin/<arch>/Release/*.dll to runtimes/<rid>/native/
-          foreach ($rid in @("win-x64", "win-arm64")) {
+          foreach ($rid in @("win-x64")) {
             $nativeDir = "./nupkg/runtimes/$rid/native"
             Get-ChildItem -Path $nativeDir -Recurse -Filter "*.dll" | ForEach-Object {
               if ($_.DirectoryName -ne (Resolve-Path $nativeDir).Path) {
@@ -184,12 +174,6 @@ jobs:
           name: dotnet-artifacts-x64
           path: ./dotnet-artifacts-x64
 
-      - name: Download .NET ARM64 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dotnet-artifacts-arm64
-          path: ./dotnet-artifacts-arm64
-
       - name: Download NuGet package
         uses: actions/download-artifact@v4
         with:
@@ -215,7 +199,6 @@ jobs:
             wasm-artifacts/subvision.js
             wasm-artifacts/subvision.mjs
             dotnet-artifacts-x64/**/*.dll
-            dotnet-artifacts-arm64/**/*.dll
             nuget-package/*.nupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
