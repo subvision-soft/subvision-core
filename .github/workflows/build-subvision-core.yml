@@ -58,6 +58,7 @@ jobs:
     permissions:
       contents: write
     strategy:
+      fail-fast: false
       matrix:
         arch: [x64, ARM64]
         include:
