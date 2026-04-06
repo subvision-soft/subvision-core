@@ -1,0 +1,106 @@
+# Doxyfile for Subvision CV
+# Generated documentation configuration
+
+#---------------------------------------------------------------------------
+# Project related configuration
+#---------------------------------------------------------------------------
+
+PROJECT_NAME           = "Subvision CV"
+PROJECT_NUMBER         = "1.0"
+PROJECT_BRIEF          = "Cross-platform computer vision library for underwater target shooting scoring"
+PROJECT_LOGO           =
+OUTPUT_DIRECTORY       =
+CREATE_SUBDIRS         = NO
+
+#---------------------------------------------------------------------------
+# Build related configuration
+#---------------------------------------------------------------------------
+
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+
+#---------------------------------------------------------------------------
+# Input configuration
+#---------------------------------------------------------------------------
+
+INPUT                  = ../include \
+                         ../src \
+                         ../emscripten_binding.cpp \
+                         ../cli_wrapper.cpp
+INPUT_ENCODING         = UTF-8
+FILE_PATTERNS          = *.h *.hpp *.cpp *.c
+RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */cmake-build-* */build-dotnet-* */test/*
+
+#---------------------------------------------------------------------------
+# Source browsing
+#---------------------------------------------------------------------------
+
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+
+#---------------------------------------------------------------------------
+# Output configuration
+#---------------------------------------------------------------------------
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = cpp/html
+HTML_FILE_EXTENSION    = .html
+GENERATE_TREEVIEW      = YES
+TREEVIEW_WIDTH         = 300
+
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_XML           = NO
+
+#---------------------------------------------------------------------------
+# Preprocessor configuration
+#---------------------------------------------------------------------------
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO
+PREDEFINED             = __EMSCRIPTEN__ \
+                         _MANAGED
+
+#---------------------------------------------------------------------------
+# Dot / Graph configuration
+#---------------------------------------------------------------------------
+
+HAVE_DOT               = NO
+CLASS_DIAGRAMS         = YES
+COLLABORATION_GRAPH    = NO
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+
+#---------------------------------------------------------------------------
+# Warning configuration
+#---------------------------------------------------------------------------
+
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+
+#---------------------------------------------------------------------------
+# Additional settings
+#---------------------------------------------------------------------------
+
+JAVADOC_AUTOBRIEF      = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+BUILTIN_STL_SUPPORT    = YES
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = YES
+SHOW_NAMESPACES        = YES
+SHOW_FILES             = YES
+SHOW_INCLUDE_FILES     = YES
+FULL_PATH_NAMES        = NO
+TAB_SIZE               = 4
+OPTIMIZE_OUTPUT_FOR_C  = NO

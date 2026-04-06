@@ -1,5 +1,6 @@
 #include "../include/impact_detection.h"
 
+#include "../include/logging.h"
 #include "sheet_detection.h"
 #include "../include/constants.h"
 #include "../include/utils.h"
@@ -7,9 +8,11 @@
 #include "../include/target_detection.h"
 
 namespace subvision {
-
     std::vector<Impact> drawAndGetImpactsPoints(const std::vector<cv::Point2f> &impacts, cv::Mat &sheetMat,
-                                              const std::map<int, Ellipse> &targetsEllipsis) {
+                                                const std::map<int, Ellipse> &targetsEllipsis) {
+        subvision::log(
+            "drawAndGetImpactsPoints" + std::to_string(impacts.size()) + " impacts" + std::to_string(
+                targetsEllipsis.size()) + " targets");
         const auto start = std::chrono::high_resolution_clock::now();
         std::vector<Impact> points;
         points.reserve(impacts.size());
@@ -19,7 +22,6 @@ namespace subvision {
         const cv::Scalar orange(0, 165, 255);
         const cv::Scalar white(255, 255, 255);
         constexpr int perpendicularLineLength = 25;
-        constexpr float pi = 3.14159265f;
 
         for (const auto &impact: impacts) {
             int closestZone = SUBVISION_ZONE_UNDEFINED;
@@ -39,8 +41,8 @@ namespace subvision {
 
             const Ellipse targetEllipsis = growEllipse(targetsEllipsis.at(closestZone), 1.8f);
             const cv::Point center = tupleIntCast(std::get<0>(targetEllipsis));
-            const float radAngle = getAngle(impact, center) + pi;
-            const cv::Point2f pointOnEllipse = getPointOnEllipse(targetEllipsis, radAngle);
+            const float radAngle = getAngle(center,impact );
+            const cv::Point2f pointOnEllipse = getPointOnEllipse(targetEllipsis, toDegrees(radAngle));
             const cv::Point pointOnEllipseInt = tupleIntCast(pointOnEllipse);
             const cv::Point impactInt = tupleIntCast(impact);
 
@@ -71,35 +73,45 @@ namespace subvision {
 
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Temps écoulé pour drawAndGetImpactsPoints: " << elapsed.count() << " secondes" << std::endl;
+        subvision::log("Temps écoulé pour drawAndGetImpactsPoints: " + std::to_string(elapsed.count()) + " secondes");
         return points;
     }
 
-    bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results) {
+    bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results,
+                         const std::vector<cv::Point2f> &coordinates) {
+        log("retrieveImpacts");
+        try {
+            cv::Mat sheetMat = coordinates.empty()
+                                   ? getSheetPicture(imageToProcess.clone())
+                                   : getSheetPictureManually(imageToProcess.clone(), coordinates);
 
-        cv::Mat sheetMat = getSheetPicture(imageToProcess.clone());
+            // Resize to standard dimensions if needed
+            if (sheetMat.cols != PICTURE_WIDTH_SHEET_DETECTION || sheetMat.rows != PICTURE_HEIGHT_SHEET_DETECTION) {
+                resize(sheetMat, sheetMat, cv::Size(PICTURE_WIDTH_SHEET_DETECTION, PICTURE_HEIGHT_SHEET_DETECTION));
+            }
 
-        // Resize to standard dimensions if needed
-        if (sheetMat.cols != PICTURE_WIDTH_SHEET_DETECTION || sheetMat.rows != PICTURE_HEIGHT_SHEET_DETECTION) {
-            resize(sheetMat, sheetMat, cv::Size(PICTURE_WIDTH_SHEET_DETECTION, PICTURE_HEIGHT_SHEET_DETECTION));
+
+            // Get targets ellipses
+            std::map<int, Ellipse> targetsEllipsis = getTargetsEllipse(sheetMat);
+            targetsEllipsis = targetCoordinatesToSheetCoordinates(targetsEllipsis);
+
+            // Get impacts coordinates
+            const std::vector<cv::Point2f> impactsCoordinates = getImpactsCoordinates(sheetMat);
+
+            // Draw targets
+            drawTargets(targetsEllipsis, sheetMat);
+
+
+            // Draw impacts and get points
+            const std::vector<Impact> points = drawAndGetImpactsPoints(impactsCoordinates, sheetMat, targetsEllipsis);
+
+            // Set results
+            results.annotatedImage = sheetMat;
+            results.impacts = points;
+        } catch (const std::exception &e) {
+            log(e.what());
+            return false;
         }
-
-        // Get targets ellipses
-        std::map<int, Ellipse> targetsEllipsis = getTargetsEllipse(sheetMat);
-        targetsEllipsis = targetCoordinatesToSheetCoordinates(targetsEllipsis);
-
-        // Get impacts coordinates
-        const std::vector<cv::Point2f> impactsCoordinates = getImpactsCoordinates(sheetMat);
-
-        // Draw targets
-        drawTargets(targetsEllipsis, sheetMat);
-
-        // Draw impacts and get points
-        const std::vector<Impact> points = drawAndGetImpactsPoints(impactsCoordinates, sheetMat, targetsEllipsis);
-
-        // Set results
-        results.annotatedImage = sheetMat; // Assign the encoded string
-        results.impacts = points;
 
         return true;
     }

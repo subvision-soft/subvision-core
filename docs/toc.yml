@@ -1,0 +1,17 @@
+- name: Home
+  href: index.md
+- name: Manual
+  href: manual/
+  items:
+    - name: Overview
+      href: manual/index.md
+    - name: Getting Started
+      href: manual/getting-started.md
+    - name: JavaScript / WebAssembly
+      href: manual/javascript.md
+    - name: Architecture
+      href: manual/architecture.md
+- name: C++ API Reference
+  href: cpp/html/index.html
+- name: .NET API Reference
+  href: api/

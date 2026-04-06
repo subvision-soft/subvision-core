@@ -11,27 +11,32 @@
             margin: 0 auto;
             padding: 20px;
         }
+
         .container {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
+
         .image-container {
             display: flex;
             flex-direction: column;
             gap: 10px;
             align-items: center;
         }
+
         img {
             max-width: 100%;
             border: 1px solid #ccc;
         }
+
         #results {
             white-space: pre-wrap;
             border: 1px solid #ccc;
             padding: 10px;
             background-color: #f5f5f5;
         }
+
         button {
             padding: 10px;
             background-color: #4CAF50;
@@ -40,137 +45,136 @@
             cursor: pointer;
             border-radius: 4px;
         }
+
         button:hover {
             background-color: #45a049;
         }
+
         input[type="file"] {
             margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>SubvisionCV - Détection d'Impacts</h1>
+<h1>SubvisionCV - Détection d'Impacts</h1>
 
-    <div class="container">
-        <div>
-            <h2>Chargez une image de cible</h2>
-            <input type="file" id="imageInput" accept="image/*">
-            <canvas id="canvas" style="display:none;"></canvas>
-            <button id="processButton" disabled>Analyser l'image</button>
-        </div>
-
-        <div class="image-container">
-            <h3>Image originale</h3>
-            <img id="originalImage" alt="Image originale" style="display: none;">
-        </div>
-
-        <div class="image-container">
-            <h3>Image avec impacts détectés</h3>
-            <canvas id="resultImage"  style="display: none;width: 100%;"></canvas>
-        </div>
-
-        <div>
-            <h3>Résultats de l'analyse</h3>
-            <pre id="results">Chargez une image et cliquez sur Analyser pour voir les résultats.</pre>
-        </div>
+<div class="container">
+    <div>
+        <h2>Chargez une image de cible</h2>
+        <input type="file" id="imageInput" accept="image/*">
+        <canvas id="canvas" style="display:none;"></canvas>
+        <button id="processButton" disabled>Analyser l'image</button>
     </div>
 
-    <script type="module">
-        import SubvisionCVModule from './subvision_core_es6.js';
+    <div class="image-container">
+        <h3>Image originale</h3>
+        <img id="originalImage" alt="Image originale" style="display: none;">
+    </div>
 
-        let subvisionCV;
-        let imageBase64;
-        let imageLoaded = false;
+    <div class="image-container">
+        <h3>Image avec impacts détectés</h3>
+        <canvas id="resultImage" style="display: none;width: 100%;"></canvas>
+    </div>
 
-        SubvisionCVModule().then(module => {
-            subvisionCV = module;
-            console.log('Module WebAssembly chargé avec succès');
-            document.getElementById('processButton').disabled = false;
-        });
+    <div>
+        <h3>Résultats de l'analyse</h3>
+        <pre id="results">Chargez une image et cliquez sur Analyser pour voir les résultats.</pre>
+    </div>
+</div>
 
-        document.getElementById('imageInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+<script type="module">
+    import SubvisionCVModule from './subvision_core_es6.js';
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                imageBase64 = event.target.result;
+    let subvisionCV;
+    let imageBase64;
+    let imageLoaded = false;
 
-                const img = document.getElementById('originalImage');
-                img.src = imageBase64;
-                img.style.display = 'block';
+    SubvisionCVModule().then(module => {
+        subvisionCV = module;
+        console.log('Module WebAssembly chargé avec succès');
+        document.getElementById('processButton').disabled = false;
+    });
 
-                // Dessiner l'image sur le canvas pour récupérer les données
-                img.onload = function() {
-                    const canvas = document.getElementById('canvas');
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    imageLoaded = true;
-                };
+    document.getElementById('imageInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-                document.getElementById('resultImage').style.display = 'none';
-                document.getElementById('results').textContent = 'Image chargée. Cliquez sur Analyser pour détecter les impacts.';
-            };
-            reader.readAsDataURL(file);
-        });
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            imageBase64 = event.target.result;
 
-        document.getElementById('processButton').addEventListener('click', function() {
-            if (!subvisionCV || !imageLoaded) return;
+            const img = document.getElementById('originalImage');
+            img.src = imageBase64;
+            img.style.display = 'block';
 
-            try {
-                document.getElementById('results').textContent = 'Traitement en cours...';
-
-                // Récupérer les données du canvas
+            // Dessiner l'image sur le canvas pour récupérer les données
+            img.onload = function () {
                 const canvas = document.getElementById('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
                 const ctx = canvas.getContext('2d');
-                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+                imageLoaded = true;
+            };
 
-                const startTime = performance.now();
-                const coordinates = subvisionCV.getSheetCoordinates(imgData.width, imgData.height, imgData.data);
-                const endTime = performance.now();
-                const time = (endTime - startTime);
-                console.log(`Temps d'exécution : ${time.toFixed(2)} ms`);
-                console.log(coordinates);
-                const results = subvisionCV.processTargetImage(imgData.width, imgData.height, imgData.data);
+            document.getElementById('resultImage').style.display = 'none';
+            document.getElementById('results').textContent = 'Image chargée. Cliquez sur Analyser pour détecter les impacts.';
+        };
+        reader.readAsDataURL(file);
+    });
 
+    document.getElementById('processButton').addEventListener('click', function () {
+        if (!subvisionCV || !imageLoaded) return;
 
-                // Affichage de l'image résultat
+        try {
+            document.getElementById('results').textContent = 'Traitement en cours...';
 
-                const resultImage = new ImageData(new Uint8ClampedArray(results.annotatedImage.data), results.annotatedImage.columns, results.annotatedImage.rows);
+            // Récupérer les données du canvas
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-
-                const resCanvas = document.getElementById('resultImage');
-                const ctxRes = resCanvas.getContext('2d');
-                resCanvas.width = results.annotatedImage.columns;
-                resCanvas.height = results.annotatedImage.rows;
-                ctxRes.clearRect(0, 0, resCanvas.width, resCanvas.height);
-                ctxRes.putImageData(resultImage, 0, 0);
-                document.getElementById('resultImage').style.display = 'block';
-
-                // Affichage des résultats
-                let resultsText = `Nombre d'impacts détectés: ${results.impacts.length}\n\n`;
-
-                for (const impact of results.impacts) {
-                    resultsText += `Impact ${impact.index + 1}:\n`;
-                    resultsText += `   Zone: ${impact.zone}\n`;
-                    resultsText += `   Score: ${impact.score}\n`;
-                    resultsText += `   Distance: ${impact.distance}\n`;
-                    resultsText += `   Angle: ${impact.angle.toFixed(2)} degrés\n\n`;
-
-                }
+            const startTime = performance.now();
+            const coordinates = subvisionCV.getSheetCoordinates(imgData.width, imgData.height, imgData.data);
+            const endTime = performance.now();
+            const time = (endTime - startTime);
+            console.log(`Temps d'exécution : ${time.toFixed(2)} ms`);
+            console.log(coordinates);
+            const results = subvisionCV.processTargetImage(imgData.width, imgData.height, imgData.data);
 
 
+            // Affichage de l'image résultat
+
+            const resultImage = new ImageData(new Uint8ClampedArray(results.annotatedImage.data), results.annotatedImage.columns, results.annotatedImage.rows);
 
 
+            const resCanvas = document.getElementById('resultImage');
+            const ctxRes = resCanvas.getContext('2d');
+            resCanvas.width = results.annotatedImage.columns;
+            resCanvas.height = results.annotatedImage.rows;
+            ctxRes.clearRect(0, 0, resCanvas.width, resCanvas.height);
+            ctxRes.putImageData(resultImage, 0, 0);
+            document.getElementById('resultImage').style.display = 'block';
 
-                document.getElementById('results').textContent = resultsText;
-            } catch (error) {
-                console.error('Erreur lors du traitement:', error);
-                document.getElementById('results').textContent = `Erreur: ${error.message}`;
+            // Affichage des résultats
+            let resultsText = `Nombre d'impacts détectés: ${results.impacts.length}\n\n`;
+
+            for (const impact of results.impacts) {
+                resultsText += `Impact ${impact.index + 1}:\n`;
+                resultsText += `   Zone: ${impact.zone}\n`;
+                resultsText += `   Score: ${impact.score}\n`;
+                resultsText += `   Distance: ${impact.distance}\n`;
+                resultsText += `   Angle: ${impact.angle.toFixed(2)} degrés\n\n`;
+
             }
-        });
-    </script>
+
+
+            document.getElementById('results').textContent = resultsText;
+        } catch (error) {
+            console.error('Erreur lors du traitement:', error);
+            document.getElementById('results').textContent = `Erreur: ${error.message}`;
+        }
+    });
+</script>
 </body>
 </html>
