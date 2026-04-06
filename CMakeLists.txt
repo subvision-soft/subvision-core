@@ -102,9 +102,9 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
         # compatible. The VC++ Redistributable is required on target machines, but it
         # is already installed on the vast majority of Windows machines.
 
-        # Set output name with architecture suffix
+        # Set output name
         set_target_properties(Subvision PROPERTIES
-                OUTPUT_NAME "subvision-${ARCH_SUFFIX}"
+                OUTPUT_NAME "SubvisionNET"
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${ARCH_SUFFIX}"
         )
 
@@ -147,7 +147,7 @@ if (BUILD_CLI_WRAPPER AND NOT EMSCRIPTEN)
             )
         else ()
             message(WARNING "Could not find OpenCV DLLs (opencv_*.dll) in ${_OPENCV_BIN_DIR}. "
-                    "You will need to manually place the OpenCV binaries next to subvision-${ARCH_SUFFIX}.dll")
+                    "You will need to manually place the OpenCV binaries next to SubvisionNET.dll")
         endif ()
     else ()
         message(WARNING "C++/CLI wrapper requires MSVC compiler")
