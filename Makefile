@@ -108,7 +108,7 @@ subvision_nuget: subvision_dotnet_all
 ifeq ($(OS),Windows_NT)
 	@if not exist nupkg mkdir nupkg
 	@if not exist nupkg\runtimes\win-x64\native mkdir nupkg\runtimes\win-x64\native
-	@copy build-dotnet-x64\bin\x64\Release\subvision-x64.dll nupkg\runtimes\win-x64\native\
+	@copy build-dotnet-x64\bin\x64\Release\SubvisionNET.dll nupkg\runtimes\win-x64\native\
 	@copy build-dotnet-x64\bin\x64\Release\opencv_*.dll nupkg\runtimes\win-x64\native\
 	@copy Subvision.nuspec nupkg\
 	@copy Subvision.targets nupkg\

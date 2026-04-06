@@ -17,7 +17,7 @@
   </metadata>
   <files>
     <!-- x64 native binaries -->
-    <file src="runtimes\win-x64\native\subvision-x64.dll"
+    <file src="runtimes\win-x64\native\SubvisionNET.dll"
           target="runtimes\win-x64\native" />
     <file src="runtimes\win-x64\native\opencv_*.dll"
           target="runtimes\win-x64\native" />

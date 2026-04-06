@@ -19,7 +19,7 @@ Subvision CV runs on three platforms from a single C++ codebase:
 |----------|-----------|--------|
 | **Native C++** | OpenCV + CMake | Static library (`subvision_lib`) |
 | **WebAssembly** | Emscripten + embind | ES6 module (`subvision_core_es6.js`) |
-| **.NET** | C++/CLI wrapper | Managed DLL (`subvision-x64.dll`) |
+| **.NET** | C++/CLI wrapper | Managed DLL (`SubvisionNET.dll`) |
 
 ## Documentation Sections
 

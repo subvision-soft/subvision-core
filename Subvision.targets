@@ -18,7 +18,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Copy native DLLs to output directory -->
+    <!-- Add reference to the managed wrapper -->
+    <Reference Include="SubvisionNET" Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\$(_SubvisionRID)\native\SubvisionNET.dll')">
+      <HintPath>$(MSBuildThisFileDirectory)..\..\runtimes\$(_SubvisionRID)\native\SubvisionNET.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Copy all DLLs (including native dependencies and the wrapper) to output directory -->
     <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\$(_SubvisionRID)\native\*.dll"
           Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\$(_SubvisionRID)\native\')"
           CopyToOutputDirectory="PreserveNewest"
