@@ -75,8 +75,8 @@ cmake --build . --config Release
 ```
 
 Output:
-- `build-dotnet-x64/bin/x64/subvision-x64.dll`
-- `build-dotnet-x86/bin/x86/subvision-x86.dll`
+- `build-dotnet-x64/bin/x64/SubvisionNET.dll`
+- `build-dotnet-x86/bin/x86/SubvisionNET.dll`
 
 ---
 
