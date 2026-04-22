@@ -4,6 +4,15 @@
 
 #include "sheet_detection.h"
 #include <opencv2/opencv.hpp>
+#if __has_include(<opencv2/aruco.hpp>)
+#include <opencv2/aruco.hpp>
+#define SUBVISION_HAS_OPENCV_ARUCO 1
+#elif __has_include(<opencv2/objdetect/aruco_detector.hpp>)
+#include <opencv2/objdetect/aruco_detector.hpp>
+#define SUBVISION_HAS_OPENCV_ARUCO 1
+#else
+#define SUBVISION_HAS_OPENCV_ARUCO 0
+#endif
 #include <vector>
 
 #include "constants.h"
@@ -16,8 +25,10 @@ namespace subvision {
     std::vector<Point2f> getSheetCoordinatesUsingAruCoMarkers(const Mat &sheet_mat) {
         log("getSheetCoordinatesUsingAruCoMarkers");
 
-        aruco::Dictionary dictionary =
-                aruco::getPredefinedDictionary(aruco::DICT_4X4_50);
+#if SUBVISION_HAS_OPENCV_ARUCO
+
+        cv::aruco::Dictionary dictionary =
+                cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
 
         Mat gray;
         cvtColor(sheet_mat, gray, COLOR_BGR2GRAY);
@@ -25,7 +36,7 @@ namespace subvision {
         std::vector<int> ids;
         std::vector<std::vector<Point2f> > corners;
 
-        aruco::DetectorParameters params;
+        cv::aruco::DetectorParameters params;
 
         params.adaptiveThreshWinSizeMin = 5;
         params.adaptiveThreshWinSizeMax = 25;
@@ -39,14 +50,14 @@ namespace subvision {
         params.polygonalApproxAccuracyRate = 0.03;
 
         params.cornerRefinementMethod =
-                aruco::CORNER_REFINE_SUBPIX;
-        aruco::ArucoDetector detector(dictionary, params);
+                cv::aruco::CORNER_REFINE_SUBPIX;
+        cv::aruco::ArucoDetector detector(dictionary, params);
 
         detector.detectMarkers(gray, corners, ids);
         Mat debug = sheet_mat.clone();
 
         if (!ids.empty()) {
-            aruco::drawDetectedMarkers(debug, corners, ids);
+            cv::aruco::drawDetectedMarkers(debug, corners, ids);
         }
 
         if (ids.empty()) {
@@ -120,6 +131,11 @@ namespace subvision {
             PICTURE_WIDTH_SHEET_DETECTION,
             PICTURE_HEIGHT_SHEET_DETECTION
         );
+#else
+        // Keep behavior stable when OpenCV is built without ArUco (common in CI images).
+        log("OpenCV ArUco module not available, fallback to contour-based sheet detection");
+        return getSheetCoordinates(sheet_mat);
+#endif
     }
 
     std::vector<Point2f> getSheetCoordinates(const Mat &sheet_mat) {
