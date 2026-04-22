@@ -50,10 +50,29 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources)
 # Activation des tests
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_CLI_WRAPPER "Build C++/CLI .NET wrapper" OFF)
+option(BUILD_DEV_MAIN "Build development test runner" ON)
 
 # Don't build tests when building CLI wrapper (they conflict with /clr)
 if (BUILD_TESTS AND NOT EMSCRIPTEN AND NOT BUILD_CLI_WRAPPER)
     add_subdirectory(test)
+endif ()
+
+# Development/Debug executable for testing during development
+if (BUILD_DEV_MAIN AND NOT EMSCRIPTEN AND NOT BUILD_CLI_WRAPPER)
+    add_executable(subvision_dev_test main.cpp)
+    target_include_directories(subvision_dev_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
+    target_link_libraries(subvision_dev_test PRIVATE subvision_lib ${OpenCV_LIBS})
+
+    # Copy resources for the dev executable
+    add_custom_command(TARGET subvision_dev_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:subvision_dev_test>/resources
+    )
+
+    # Set output directory for clarity
+    set_target_properties(subvision_dev_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    )
 endif ()
 
 # Configuration C++/CLI pour .NET
