@@ -66,6 +66,19 @@ cv::Mat getSheetPictureManually(const cv::Mat &image,
  *       suitable for storage and later reuse with getSheetPictureManually().
  */
 std::vector<cv::Point2f> getSheetCoordinates(const cv::Mat &sheet_mat);
+/**
+ * @brief Detect the four corner coordinates of the shooting sheet using AruCo markers.
+ *
+ *
+ * @param sheet_mat Input BGR image containing the shooting sheet.
+ * @return Vector of 4 corner points in normalised [0, 1] coordinates.
+ *
+ * @throws std::runtime_error If no valid quadrilateral contour is found.
+ *
+ * @note The returned coordinates are resolution-independent percentages,
+ *       suitable for storage and later reuse with getSheetPictureManually().
+ */
+std::vector<cv::Point2f> getSheetCoordinatesUsingAruCoMarkers(const cv::Mat &sheet_mat);
 } // namespace subvision
 
 #endif // SHEET_DETECTION_H
