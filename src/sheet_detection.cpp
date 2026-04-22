@@ -4,15 +4,6 @@
 
 #include "sheet_detection.h"
 #include <opencv2/opencv.hpp>
-#if __has_include(<opencv2/aruco.hpp>)
-#include <opencv2/aruco.hpp>
-#define SUBVISION_HAS_OPENCV_ARUCO 1
-#elif __has_include(<opencv2/objdetect/aruco_detector.hpp>)
-#include <opencv2/objdetect/aruco_detector.hpp>
-#define SUBVISION_HAS_OPENCV_ARUCO 1
-#else
-#define SUBVISION_HAS_OPENCV_ARUCO 0
-#endif
 #include <vector>
 
 #include "constants.h"
@@ -25,7 +16,6 @@ namespace subvision {
     std::vector<Point2f> getSheetCoordinatesUsingAruCoMarkers(const Mat &sheet_mat) {
         log("getSheetCoordinatesUsingAruCoMarkers");
 
-#if SUBVISION_HAS_OPENCV_ARUCO
 
         cv::aruco::Dictionary dictionary =
                 cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
@@ -131,11 +121,6 @@ namespace subvision {
             PICTURE_WIDTH_SHEET_DETECTION,
             PICTURE_HEIGHT_SHEET_DETECTION
         );
-#else
-        // Keep behavior stable when OpenCV is built without ArUco (common in CI images).
-        log("OpenCV ArUco module not available, fallback to contour-based sheet detection");
-        return getSheetCoordinates(sheet_mat);
-#endif
     }
 
     std::vector<Point2f> getSheetCoordinates(const Mat &sheet_mat) {
