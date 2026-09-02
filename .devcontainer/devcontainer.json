@@ -8,6 +8,11 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "ms-vscode-remote.remote-containers",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-vscode.cpptools-extension-pack",
         "ms-vscode.cmake-tools",
         "ms-vscode.cpptools"
       ]
