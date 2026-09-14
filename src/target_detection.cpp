@@ -223,7 +223,4 @@ namespace subvision {
             line(sheetMat, tupleIntCast(leftPoint), tupleIntCast(rightPoint), targetColor, drawingWidth);
         }
     }
-
-    void drawDetectedSheet(cv::Mat &sheetMat) {
-    }
 }

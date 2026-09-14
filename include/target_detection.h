@@ -98,7 +98,6 @@ void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat);
  *
  * @note Currently a stub — not yet implemented.
  */
-void drawDetectedSheet(cv::Mat &sheetMat);
 } // namespace subvision
 
 #endif // SUBVISION_CORE_TARGET_DETECTION_H

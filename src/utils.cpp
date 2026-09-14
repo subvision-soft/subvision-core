@@ -1,9 +1,11 @@
 #include "../include/utils.h"
 #include "../include/constants.h"
 #include "../include/logging.h"
+#include <cmath>
+#include <vector>
+#include <algorithm>
 
 namespace subvision {
-
     float toRadians(const float angle) {
         constexpr float degToRad = static_cast<float>(CV_PI) / 180.0f;
         return angle * degToRad;
@@ -42,12 +44,10 @@ namespace subvision {
         const float localAngle = toRadians(angle - ellipseAngle);
         const float x = center.x + cos(localAngle) * (radii.width / 2);
         const float y = center.y + sin(localAngle) * (radii.height / 2);
-        return rotatePoint( center, {x, y}, toRadians(ellipseAngle));
+        return rotatePoint(center, {x, y}, toRadians(ellipseAngle));
     }
 
-
-
-
+    constexpr float JUMP_THRESHOLD = 1.5;
 
     Ellipse growEllipse(const Ellipse &ellipse, const float factor) {
         const cv::Point2f &center = std::get<0>(ellipse);
@@ -124,7 +124,8 @@ namespace subvision {
         return sheetMat(coordinates).clone();
     }
 
-    std::vector<cv::Point2f> coordinatesToPercentage(const std::vector<cv::Point> &coordinates, const int width, const int height) {
+    std::vector<cv::Point2f> coordinatesToPercentage(const std::vector<cv::Point> &coordinates, const int width,
+                                                     const int height) {
         std::vector<cv::Point2f> percentageCoordinates;
         percentageCoordinates.reserve(coordinates.size());
 
@@ -141,7 +142,8 @@ namespace subvision {
         return percentageCoordinates;
     }
 
-    std::vector<cv::Point2f> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates, const int width, const int height) {
+    std::vector<cv::Point2f> percentageToCoordinates(const std::vector<cv::Point2f> &percentageCoordinates,
+                                                     const int width, const int height) {
         std::vector<cv::Point2f> coordinates;
         coordinates.reserve(percentageCoordinates.size());
 
@@ -156,5 +158,81 @@ namespace subvision {
 
     std::vector<Impact> createImpactVector() {
         return std::vector<Impact>();
+    }
+
+
+    std::vector<cv::Point> cleanupEllipticalContour(const std::vector<cv::Point> &contour) {
+        cv::Moments M = cv::moments(contour);
+
+
+        double cx = M.m10 / M.m00;
+        double cy = M.m01 / M.m00;
+
+
+        const size_t n = contour.size();
+
+        std::vector<double> distances(n);
+
+        // Calculate distance of every contour point from center
+        for (size_t i = 0; i < n; ++i)
+        {
+            double dx = contour[i].x - cx;
+            double dy = contour[i].y - cy;
+
+            distances[i] = std::sqrt(dx * dx + dy * dy);
+        }
+
+        // Calculate difference between consecutive distances
+        std::vector<bool> bad_jumps(n - 1, false);
+
+        for (size_t i = 0; i < n - 1; ++i)
+        {
+            double diff = std::abs(distances[i + 1] - distances[i]);
+
+            bad_jumps[i] = diff > JUMP_THRESHOLD;
+        }
+
+
+
+        std::vector<cv::Point> cleaned_contour;
+        for (size_t i = 0; i < contour.size() - 1; ++i)
+        {
+            if (!bad_jumps[i])
+            {
+                cleaned_contour.push_back(contour[i]);
+            }
+        }
+        return cleaned_contour;
+    }
+
+    void fillShortestPath(std::vector<bool> &arr) {
+        std::vector<size_t> true_indices;
+
+        for (size_t i = 0; i < arr.size(); ++i) {
+            if (arr[i])
+                true_indices.push_back(i);
+        }
+
+        if (true_indices.empty())
+            return;
+
+        size_t first_idx = true_indices.front();
+        size_t last_idx = true_indices.back();
+
+        size_t distance = last_idx - first_idx;
+
+        if (distance > arr.size() / 2) {
+            for (size_t i = last_idx; i < arr.size(); ++i)
+                arr[i] = true;
+
+            for (size_t i = 0; i <= first_idx; ++i)
+                arr[i] = true;
+
+            for (size_t i = first_idx + 1; i < last_idx; ++i)
+                arr[i] = false;
+        } else {
+            for (size_t i = first_idx; i <= last_idx; ++i)
+                arr[i] = true;
+        }
     }
 }
