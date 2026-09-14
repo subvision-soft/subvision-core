@@ -272,8 +272,8 @@ Ellipse retrieveEllipse(const cv::Mat &image) {
         return contourArea(a) < contourArea(b);
       });
 
-  const std::vector<cv::Point> &biggestContour = *maxIt;
-
+  std::vector<cv::Point> biggestContour = *maxIt;
+  biggestContour = cleanupEllipticalContour(biggestContour);
   if (biggestContour.size() >= 5) {
     const cv::RotatedRect rotatedRect = fitEllipse(biggestContour);
     const auto end = std::chrono::high_resolution_clock::now();
@@ -290,7 +290,7 @@ Ellipse retrieveEllipse(const cv::Mat &image) {
 
   std::vector<cv::Point> ptsEdges;
   findNonZero(mask, ptsEdges);
-
+  ptsEdges = cleanupEllipticalContour(ptsEdges);
   if (ptsEdges.size() >= 5) {
     const cv::RotatedRect rotatedRect = fitEllipse(ptsEdges);
     const auto end = std::chrono::high_resolution_clock::now();
