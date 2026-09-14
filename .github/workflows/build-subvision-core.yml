@@ -71,7 +71,7 @@ jobs:
 
   build-dotnet:
     #    needs: test
-    runs-on: windows-latest
+    runs-on: windows-2022
     permissions:
       contents: write
     strategy:
