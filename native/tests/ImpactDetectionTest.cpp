@@ -4,10 +4,10 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <gtest/gtest.h>
-#include "../include/constants.h"
-#include "../include/image_processing.h"
-#include "../include/utils.h"
-#include "../include/logging.h"
+#include "constants.h"
+#include "image_processing.h"
+#include "utils.h"
+#include "logging.h"
 
 namespace fs = std::filesystem;
 

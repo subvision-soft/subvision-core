@@ -38,16 +38,13 @@ jobs:
       - name: Install OpenCV
         run: |
           sudo apt-get update
-          sudo apt-get install -y libopencv-dev
+          sudo apt-get install -y libopencv-dev libgtest-dev ninja-build
 
       - name: Build and test
         run: |
-          mkdir -p build
-          cd build
-          cmake ..
-          make -j$(nproc)
-          cd test
-          ./subvision_tests
+          cmake -S . -B build -G Ninja -DBUILD_TESTS=ON -DBUILD_WASM=OFF
+          cmake --build build -j$(nproc)
+          ctest --test-dir build --output-on-failure
 
   build-wasm:
     #    needs: test
@@ -144,8 +141,8 @@ jobs:
       - name: Build NuGet package
         shell: pwsh
         run: |
-          Copy-Item Subvision.targets ./nupkg/
-          nuget pack Subvision.nuspec -OutputDirectory ./nupkg -Version ${{ needs.get-version.outputs.version }} -BasePath ./nupkg
+          Copy-Item dotnet/Subvision.targets ./nupkg/
+          nuget pack dotnet/Subvision.nuspec -OutputDirectory ./nupkg -Version ${{ needs.get-version.outputs.version }} -BasePath ./nupkg
 
       - name: Upload NuGet package
         uses: actions/upload-artifact@v4

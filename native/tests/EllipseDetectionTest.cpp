@@ -6,9 +6,9 @@
 #include "image_processing.h"
 #include "impact_detection.h"
 #include "sheet_detection.h"
-#include "../include/constants.h"
-#include "../include/target_detection.h"
-#include "../include/logging.h"
+#include "constants.h"
+#include "target_detection.h"
+#include "logging.h"
 
 namespace fs = std::filesystem;
 

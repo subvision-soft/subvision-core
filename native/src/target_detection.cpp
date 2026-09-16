@@ -1,12 +1,12 @@
-#include "../include/target_detection.h"
+#include "target_detection.h"
 
 #include <future>
 #include <vector>
 
-#include "../include/constants.h"
-#include "../include/logging.h"
-#include "../include/utils.h"
-#include "../include/image_processing.h"
+#include "constants.h"
+#include "logging.h"
+#include "utils.h"
+#include "image_processing.h"
 
 namespace subvision {
     Ellipse getTargetEllipse(const cv::Mat &mat) {

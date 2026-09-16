@@ -1,8 +1,8 @@
-#include "../include/image_processing.h"
+#include "image_processing.h"
 
-#include "../include/constants.h"
-#include "../include/logging.h"
-#include "../include/utils.h"
+#include "constants.h"
+#include "logging.h"
+#include "utils.h"
 
 
 namespace subvision {
