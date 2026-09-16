@@ -5,3 +5,4 @@
 .idea
 /build-dotnet-x64
 /build-dotnet-arm64
+/vcpkg_installed/

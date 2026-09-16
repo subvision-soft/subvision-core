@@ -1,0 +1,85 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 27,
+    "patch": 7
+  },
+  "configurePresets": [
+    {
+      "name": "native",
+      "displayName": "Native",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/native",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTS": "OFF",
+        "BUILD_CLI_WRAPPER": "OFF",
+        "BUILD_WASM": "OFF",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "native-tests",
+      "displayName": "Native with tests",
+      "inherits": "native",
+      "binaryDir": "${sourceDir}/build/native-tests",
+      "cacheVariables": {
+        "BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "cli",
+      "displayName": "C++/CLI Wrapper",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/cli",
+      "cacheVariables": {
+        "BUILD_TESTS": "OFF",
+        "BUILD_CLI_WRAPPER": "ON",
+        "BUILD_WASM": "OFF",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    },
+    {
+      "name": "emscripten",
+      "displayName": "Emscripten",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/emscripten",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "BUILD_TESTS": "OFF",
+        "BUILD_CLI_WRAPPER": "OFF",
+        "BUILD_WASM": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "native",
+      "configurePreset": "native"
+    },
+    {
+      "name": "native-tests",
+      "configurePreset": "native-tests"
+    },
+    {
+      "name": "cli",
+      "configurePreset": "cli",
+      "configuration": "Release"
+    },
+    {
+      "name": "emscripten",
+      "configurePreset": "emscripten"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "native-tests",
+      "configurePreset": "native-tests",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

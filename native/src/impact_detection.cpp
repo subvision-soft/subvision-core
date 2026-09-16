@@ -1,11 +1,11 @@
-#include "../include/impact_detection.h"
+#include "impact_detection.h"
 
-#include "../include/logging.h"
+#include "logging.h"
 #include "sheet_detection.h"
-#include "../include/constants.h"
-#include "../include/utils.h"
-#include "../include/image_processing.h"
-#include "../include/target_detection.h"
+#include "constants.h"
+#include "utils.h"
+#include "image_processing.h"
+#include "target_detection.h"
 
 namespace subvision {
     std::vector<Impact> drawAndGetImpactsPoints(const std::vector<cv::Point2f> &impacts, cv::Mat &sheetMat,

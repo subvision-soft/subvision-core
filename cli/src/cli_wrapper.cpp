@@ -50,10 +50,10 @@
  * ```
  */
 
-#include "include/impact_detection.h"
-#include "include/logging.h"
-#include "include/sheet_detection.h"
-#include "include/types.h"
+#include "impact_detection.h"
+#include "logging.h"
+#include "sheet_detection.h"
+#include "types.h"
 #include <msclr/marshal_cppstd.h>
 
 

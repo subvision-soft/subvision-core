@@ -1,4 +1,4 @@
-#include "../include/logging.h"
+#include "logging.h"
 #include <iostream>
 
 bool subvision::g_loggingEnabled = false;   // default: enabled
