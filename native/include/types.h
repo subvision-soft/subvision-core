@@ -12,6 +12,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <tuple>
+#include <utility>
 
 /**
  * @namespace subvision
@@ -23,6 +24,104 @@
  * and .NET (via C++/CLI) platforms.
  */
 namespace subvision {
+    struct RingSpecs;
+
+    enum class Federation {
+        CMAS = 0,
+        FFESSM = 1
+    };
+
+    enum class Event {
+        PRECISION = 0,
+        BIATHLON = 1,
+        SUPER_BIATHLON = 2,
+        RELAY = 3
+    };
+
+    struct TargetSpecs {
+        std::list<RingSpecs> rings;
+
+        explicit TargetSpecs(const std::list<RingSpecs> &r)
+            : rings(r) {
+        }
+    };
+
+
+    struct RingSpecs {
+        int increment;
+        int maxScore;
+        int minScore;
+        int radius;
+        bool main;
+
+        explicit RingSpecs(const int inc, const int max, const int min, const int rad, const bool isMain)
+            : increment(inc), maxScore(max), minScore(min), radius(rad), main(isMain) {
+        }
+    };
+
+    struct TargetSheetSpecs {
+        Federation federation;
+        std::list<Event> event;
+        TargetSpecs targetSpecs;
+        int numberOfTargets;
+        /**
+         * @brief Constructs a TargetSheetSpecs with all fields.
+         *
+         * @param fed        The federation to which the target sheet belongs.
+         * @param evt        The events associated with the target sheet.
+         * @param specs      The target specifications.
+         * @param numTargets The number of targets on the sheet.
+         */
+        explicit TargetSheetSpecs(const Federation fed, const std::list<Event> &evt, TargetSpecs specs,
+                                  const int numTargets)
+            : federation(fed), event(evt), targetSpecs(std::move(specs)), numberOfTargets(numTargets) {
+        }
+    };
+
+    /**
+     * @brief A vector of all supported target sheet specifications.
+     */
+    const inline std::vector TARGET_SHEET_SPECS = {
+        {
+            TargetSheetSpecs(
+                Federation::CMAS,
+                {Event::PRECISION, Event::BIATHLON, Event::SUPER_BIATHLON},
+                TargetSpecs({
+                    RingSpecs(5, 460, 400, 6, false),
+                    RingSpecs(5, 390, 300, 16, false),
+                    RingSpecs(5, 295, 250, 26, true),
+                    RingSpecs(5, 245, 200, 36, false),
+                    RingSpecs(5, 195, 150, 46, false),
+                    RingSpecs(5, 145, 100, 56, false)
+                }),
+                5
+            ),
+            TargetSheetSpecs(
+                Federation::CMAS,
+                {Event::RELAY},
+                TargetSpecs({
+                    RingSpecs(5, 460, 400, 6, false),
+                    RingSpecs(5, 390, 300, 16, false),
+                    RingSpecs(5, 295, 250, 26, true),
+                    RingSpecs(5, 245, 200, 36, false),
+                }),
+                9
+            ),
+            TargetSheetSpecs(
+                Federation::FFESSM,
+                {Event::PRECISION, Event::BIATHLON, Event::SUPER_BIATHLON, Event::RELAY},
+                TargetSpecs({
+                    RingSpecs(6, 570, 540, 5, false),
+                    RingSpecs(3, 537, 510, 15, false),
+                    RingSpecs(3, 507, 480, 25, true),
+                    RingSpecs(3, 477, 411, 48, false),
+                }),
+                5
+            )
+
+        }
+    };
+
 
     /**
      * @brief Geometric ellipse representation as a tuple of center, size, and rotation angle.
@@ -34,6 +133,7 @@ namespace subvision {
      *
      * Used to represent detected target rings on the shooting sheet.
      */
+
     using Ellipse = std::tuple<cv::Point2f, cv::Size2f, float>;
 
     /**
@@ -44,11 +144,11 @@ namespace subvision {
      * position relative to the target center.
      */
     struct Impact {
-        int distance;   ///< Distance from center in millimeters.
-        int score;      ///< Computed score based on distance (0–570 scale).
-        int zone;       ///< Target zone identifier (see constants.h for SUBVISION_ZONE_* values).
-        float angle;    ///< Angular position in degrees relative to target center.
-        int count;      ///< Number of impacts at this location (usually 1).
+        int distance; ///< Distance from center in millimeters.
+        int score; ///< Computed score based on distance (0–570 scale).
+        int zone; ///< Target zone identifier (see constants.h for SUBVISION_ZONE_* values).
+        float angle; ///< Angular position in degrees relative to target center.
+        int count; ///< Number of impacts at this location (usually 1).
 
         /**
          * @brief Constructs an Impact with all fields.
@@ -60,7 +160,8 @@ namespace subvision {
          * @param count    Number of impacts (typically 1).
          */
         Impact(int distance, int score, int zone, float angle, int count)
-            : distance(distance), score(score), zone(zone), angle(angle), count(count) {}
+            : distance(distance), score(score), zone(zone), angle(angle), count(count) {
+        }
     };
 
     /**
@@ -73,8 +174,8 @@ namespace subvision {
      *       Platform-specific wrappers convert to RGBA before returning.
      */
     struct ImpactResults {
-        cv::Mat annotatedImage;          ///< Image with detected targets and impacts drawn on it.
-        std::vector<Impact> impacts;     ///< List of detected impacts with scores.
+        cv::Mat annotatedImage; ///< Image with detected targets and impacts drawn on it.
+        std::vector<Impact> impacts; ///< List of detected impacts with scores.
     };
 }
 
