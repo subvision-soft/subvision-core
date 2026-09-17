@@ -28,7 +28,7 @@ namespace subvision {
 
         std::vector<Mat> channels(3);
         split(hls, channels);
-        Mat &light = channels[1];
+        const Mat &light = channels[1];
 
         double minVal, maxVal;
         minMaxLoc(light, &minVal, &maxVal);
@@ -37,7 +37,7 @@ namespace subvision {
         minVal = (maxVal - minVal) * 0.5 + minVal;
 
         Mat mask;
-        inRange(light, cv::Scalar(minVal), cv::Scalar(maxVal), mask);
+        inRange(light, Scalar(minVal), Scalar(maxVal), mask);
 
         log("Start find contours");
         std::vector<std::vector<cv::Point>> contours;

@@ -37,11 +37,11 @@ protected:
 
             subvision::ImpactResults impactsResults = subvision::ImpactResults();
             std::vector<cv::Point2f> coordinates = // Top left, top right, bottom right and bottom left corners
-                std::vector<cv::Point2f> {cv::Point2f(0, 0), cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, 0),
+                std::vector {cv::Point2f(0, 0), cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, 0),
                 cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, subvision::PICTURE_HEIGHT_SHEET_DETECTION),
                 cv::Point2f(0, subvision::PICTURE_HEIGHT_SHEET_DETECTION)
                 };
-            subvision::retrieveImpacts(image, impactsResults, std::vector<cv::Point2f>());
+            subvision::retrieveImpacts(image, impactsResults, std::vector<cv::Point2f>(), subvision::Federation::FFESSM, subvision::Event::PRECISION);
 
             cv::Mat blackMat = cv::Mat::zeros(subvision::PICTURE_HEIGHT_SHEET_DETECTION,
                                               subvision::PICTURE_WIDTH_SHEET_DETECTION, CV_8UC1);

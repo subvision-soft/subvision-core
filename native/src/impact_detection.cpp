@@ -9,7 +9,7 @@
 
 namespace subvision {
     std::vector<Impact> drawAndGetImpactsPoints(const std::vector<cv::Point2f> &impacts, cv::Mat &sheetMat,
-                                                const std::map<int, Ellipse> &targetsEllipsis) {
+                                                const std::map<int, Ellipse> &targetsEllipsis, const Federation federation, const Event eventType) {
         subvision::log(
             "drawAndGetImpactsPoints" + std::to_string(impacts.size()) + " impacts" + std::to_string(
                 targetsEllipsis.size()) + " targets");
@@ -62,7 +62,7 @@ namespace subvision {
             line(sheetMat, perpPoint1, perpPoint2, orange, 2);
 
             const int realDistance = getRealDistance(center, pointOnEllipse, impact);
-            const int score = getScore(realDistance);
+            const int score = getScore(realDistance, federation, eventType);
 
             const std::string scoreStr = std::to_string(score);
             putText(sheetMat, scoreStr, impactInt, cv::FONT_HERSHEY_SIMPLEX, 2, black, 20);
@@ -78,7 +78,7 @@ namespace subvision {
     }
 
     bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results,
-                         const std::vector<cv::Point2f> &coordinates) {
+                         const std::vector<cv::Point2f> &coordinates, const Federation federation, const Event eventType) {
         log("retrieveImpacts");
         try {
             cv::Mat sheetMat = coordinates.empty()
@@ -99,11 +99,11 @@ namespace subvision {
             const std::vector<cv::Point2f> impactsCoordinates = getImpactsCoordinates(sheetMat);
 
             // Draw targets
-            drawTargets(targetsEllipsis, sheetMat);
+            drawTargets(targetsEllipsis, sheetMat, federation, eventType);
 
 
             // Draw impacts and get points
-            const std::vector<Impact> points = drawAndGetImpactsPoints(impactsCoordinates, sheetMat, targetsEllipsis);
+            const std::vector<Impact> points = drawAndGetImpactsPoints(impactsCoordinates, sheetMat, targetsEllipsis, federation, eventType);
 
             // Set results
             results.annotatedImage = sheetMat;
