@@ -100,7 +100,7 @@ namespace subvision {
         }
         const int max_score = specs.targetSpecs.maxScore;
         int score_to_subtract = 0;
-        for (const int i: std::views::iota(1, distance)) {
+        for (const int i: std::views::iota(0, distance)) {
             for (const auto &area: areas) {
                 if (i <= area.radius) {
                     score_to_subtract += area.increment;
