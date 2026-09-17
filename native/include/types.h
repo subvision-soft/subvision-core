@@ -11,6 +11,7 @@
 #define SUBVISION_CORE_TYPES_H
 
 #include <opencv2/opencv.hpp>
+#include <list>
 #include <tuple>
 #include <utility>
 
