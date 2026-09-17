@@ -166,61 +166,35 @@ namespace subvision {
         return newEllipses;
     }
 
-    void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat) {
-        subvision::log("drawTargets");
+    void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat, const Federation federation, const Event eventType) {
+        log("drawTargets");
         constexpr int drawingWidth = 1;
         const cv::Scalar targetColor(0, 0, 255);
-        constexpr float halfPi = CV_PI * 0.5f;
-
-        for (const auto &[_key, ellipseContrat]: coordinates) {
-            const Ellipse ellipseCrossTip = growEllipse(ellipseContrat, 2.2f);
-            const Ellipse ellipseMouche = growEllipse(ellipseContrat, 0.2f);
-            const Ellipse ellipsePetitBlanc = growEllipse(ellipseContrat, 0.6f);
-            const Ellipse ellipseMoyenBlanc = growEllipse(ellipseContrat, 1.4f);
-            const Ellipse ellipseGrandBlanc = growEllipse(ellipseContrat, 1.8f);
-
+        const TargetSheetSpecs specs = getTargetSheetSpecs(federation, eventType);
+        int main_area_radius;
+        for (const auto &area: specs.targetSpecs.areas) {
+            if (area.main) {
+                main_area_radius = area.radius;
+                break;
+            }
+        }
+        for (const auto &ellipseContrat: coordinates | std::views::values) {
             const cv::Point center = tupleIntCast(std::get<0>(ellipseContrat));
             const cv::Size2f size = std::get<1>(ellipseContrat);
             const float angle = std::get<2>(ellipseContrat);
 
             ellipse(sheetMat, center, cv::Size2f(size.width * 0.5f, size.height * 0.5f), angle, 0, 360, targetColor,
                     drawingWidth);
-
-            const cv::Point centerMouche = tupleIntCast(std::get<0>(ellipseMouche));
-            const cv::Size2f sizeMouche = std::get<1>(ellipseMouche);
-            const float angleMouche = std::get<2>(ellipseMouche);
-
-            ellipse(sheetMat, centerMouche, cv::Size2f(sizeMouche.width * 0.5f, sizeMouche.height * 0.5f), angleMouche,
-                    0, 360, targetColor, drawingWidth);
-
-            const cv::Point centerPetitBlanc = tupleIntCast(std::get<0>(ellipsePetitBlanc));
-            const cv::Size2f sizePetitBlanc = std::get<1>(ellipsePetitBlanc);
-            const float anglePetitBlanc = std::get<2>(ellipsePetitBlanc);
-
-            ellipse(sheetMat, centerPetitBlanc, cv::Size2f(sizePetitBlanc.width * 0.5f, sizePetitBlanc.height * 0.5f),
-                    anglePetitBlanc, 0, 360, targetColor, drawingWidth);
-
-            const cv::Point centerMoyenBlanc = tupleIntCast(std::get<0>(ellipseMoyenBlanc));
-            const cv::Size2f sizeMoyenBlanc = std::get<1>(ellipseMoyenBlanc);
-            const float angleMoyenBlanc = std::get<2>(ellipseMoyenBlanc);
-
-            ellipse(sheetMat, centerMoyenBlanc, cv::Size2f(sizeMoyenBlanc.width * 0.5f, sizeMoyenBlanc.height * 0.5f),
-                    angleMoyenBlanc, 0, 360, targetColor, drawingWidth);
-
-            const cv::Point centerGrandBlanc = tupleIntCast(std::get<0>(ellipseGrandBlanc));
-            const cv::Size2f sizeGrandBlanc = std::get<1>(ellipseGrandBlanc);
-            const float angleGrandBlanc = std::get<2>(ellipseGrandBlanc);
-
-            ellipse(sheetMat, centerGrandBlanc, cv::Size2f(sizeGrandBlanc.width * 0.5f, sizeGrandBlanc.height * 0.5f),
-                    angleGrandBlanc, 0, 360, targetColor, drawingWidth);
-
-            const cv::Point2f topPoint = getPointOnEllipse(ellipseCrossTip, 0  );
-            const cv::Point2f bottomPoint = getPointOnEllipse(ellipseCrossTip, 180);
-            const cv::Point2f leftPoint = getPointOnEllipse(ellipseCrossTip, 270);
-            const cv::Point2f rightPoint = getPointOnEllipse(ellipseCrossTip, 90);
-
-            line(sheetMat, tupleIntCast(topPoint), tupleIntCast(bottomPoint), targetColor, drawingWidth);
-            line(sheetMat, tupleIntCast(leftPoint), tupleIntCast(rightPoint), targetColor, drawingWidth);
+            std::vector<float> ratios;
+            for (const auto &area: specs.targetSpecs.areas) {
+                float ratio = static_cast<float>(area.radius) / static_cast<float>(main_area_radius);
+                const Ellipse area_ellipse = growEllipse(ellipseContrat, ratio);
+                const cv::Point centerEllipse = tupleIntCast(std::get<0>(area_ellipse));
+                const cv::Size2f sizeEllipse = std::get<1>(area_ellipse);
+                const float angleEllipse = std::get<2>(area_ellipse);
+                ellipse(sheetMat, centerEllipse, cv::Size2f(sizeEllipse.width * 0.5f, sizeEllipse.height * 0.5f), angleEllipse,
+                        0, 360, targetColor, drawingWidth);
+            }
         }
     }
 }

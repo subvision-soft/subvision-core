@@ -31,6 +31,8 @@ namespace subvision {
  * @param sheetMat         The sheet image to annotate (modified in place).
  * @param targetsEllipsis  Map of zone ID → target Ellipse in sheet-global
  * coordinates.
+ * @param federation      Federation scoring rules to apply.
+ * @param eventType       Type of event for which to compute scores.
  * @return Vector of Impact objects with distance, score, zone, and angle.
  *
  * @see retrieveImpacts for the full processing pipeline
@@ -46,7 +48,7 @@ namespace subvision {
 std::vector<Impact>
 drawAndGetImpactsPoints(const std::vector<cv::Point2f> &impacts,
                         cv::Mat &sheetMat,
-                        const std::map<int, Ellipse> &targetsEllipsis);
+                        const std::map<int, Ellipse> &targetsEllipsis, Federation federation, Event eventType);
 
 /**
  * @brief Process a raw image to detect and score all impacts.
@@ -83,7 +85,9 @@ drawAndGetImpactsPoints(const std::vector<cv::Point2f> &impacts,
  * @endcode
  */
 bool retrieveImpacts(const cv::Mat &imageToProcess, ImpactResults &results,
-                     const std::vector<cv::Point2f> &coordinates = {});
+                     const std::vector<cv::Point2f> &coordinates = {},
+                     Federation federation = Federation::UNKNOWN,
+                     Event eventType = Event::UNKNOWN);
 } // namespace subvision
 
 #endif // SUBVISION_CORE_IMPACT_DETECTION_H

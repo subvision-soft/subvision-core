@@ -45,7 +45,7 @@ cv::Mat getSheetPicture(const cv::Mat &image);
  * @throws std::runtime_error If coordinates are empty or not exactly 4 points.
  */
 cv::Mat getSheetPictureManually(const cv::Mat &image,
-                                const std::vector<cv::Point2f> coordinates);
+                                std::vector<cv::Point2f> coordinates);
 
 /**
  * @brief Detect the four corner coordinates of the shooting sheet.

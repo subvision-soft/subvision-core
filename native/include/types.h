@@ -25,14 +25,16 @@
  * and .NET (via C++/CLI) platforms.
  */
 namespace subvision {
-    struct RingSpecs;
+    struct AreaSpecs;
 
     enum class Federation {
+        UNKNOWN = -1,
         CMAS = 0,
         FFESSM = 1
     };
 
     enum class Event {
+        UNKNOWN = -1,
         PRECISION = 0,
         BIATHLON = 1,
         SUPER_BIATHLON = 2,
@@ -40,23 +42,24 @@ namespace subvision {
     };
 
     struct TargetSpecs {
-        std::list<RingSpecs> rings;
-
-        explicit TargetSpecs(const std::list<RingSpecs> &r)
-            : rings(r) {
+        std::list<AreaSpecs> areas;
+        int maxScore;
+        explicit TargetSpecs(const std::list<AreaSpecs> &r, int max)
+            : areas(r), maxScore(max) {
         }
     };
 
 
-    struct RingSpecs {
+    struct AreaSpecs {
         int increment;
-        int maxScore;
-        int minScore;
         int radius;
         bool main;
+        bool ring;
 
-        explicit RingSpecs(const int inc, const int max, const int min, const int rad, const bool isMain)
-            : increment(inc), maxScore(max), minScore(min), radius(rad), main(isMain) {
+        AreaSpecs() = default;
+
+        explicit AreaSpecs(const int inc, const int rad, const bool isMain, const bool isRing = true)
+            : increment(inc),  radius(rad), main(isMain), ring(isRing) {
         }
     };
 
@@ -88,35 +91,37 @@ namespace subvision {
                 Federation::CMAS,
                 {Event::PRECISION, Event::BIATHLON, Event::SUPER_BIATHLON},
                 TargetSpecs({
-                    RingSpecs(5, 460, 400, 6, false),
-                    RingSpecs(5, 390, 300, 16, false),
-                    RingSpecs(5, 295, 250, 26, true),
-                    RingSpecs(5, 245, 200, 36, false),
-                    RingSpecs(5, 195, 150, 46, false),
-                    RingSpecs(5, 145, 100, 56, false)
-                }),
+                    AreaSpecs(10,  6, false),
+                    AreaSpecs(10,  16, false),
+                    AreaSpecs(5,  26, true),
+                    AreaSpecs(5,  36, false),
+                    AreaSpecs(5,  46, false),
+                    AreaSpecs(5,  56, false)
+                },460),
                 5
             ),
             TargetSheetSpecs(
                 Federation::CMAS,
                 {Event::RELAY},
                 TargetSpecs({
-                    RingSpecs(5, 460, 400, 6, false),
-                    RingSpecs(5, 390, 300, 16, false),
-                    RingSpecs(5, 295, 250, 26, true),
-                    RingSpecs(5, 245, 200, 36, false),
-                }),
+                    AreaSpecs(10,  6, false),
+                    AreaSpecs(10,  16, false),
+                    AreaSpecs(5,  26, true),
+                    AreaSpecs(5,  36, false),
+                },460),
                 9
             ),
             TargetSheetSpecs(
                 Federation::FFESSM,
                 {Event::PRECISION, Event::BIATHLON, Event::SUPER_BIATHLON, Event::RELAY},
                 TargetSpecs({
-                    RingSpecs(6, 570, 540, 5, false),
-                    RingSpecs(3, 537, 510, 15, false),
-                    RingSpecs(3, 507, 480, 25, true),
-                    RingSpecs(3, 477, 411, 48, false),
-                }),
+                    AreaSpecs(6, 5, false),
+                    AreaSpecs(3, 15, false),
+                    AreaSpecs(3, 25, true),
+                    AreaSpecs(3, 35, false),
+                    AreaSpecs(3, 45, false),
+                    AreaSpecs(3, 48, false,false),
+                },570),
                 5
             )
 

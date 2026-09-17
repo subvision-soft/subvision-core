@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
 
 const std::string TESTS_RESOURCES_PATH = (fs::current_path() / "resources").string();
 
-class ImpactDetectionTests : public ::testing::Test {
+class ImpactDetectionTests : public ::testing::Test{
 protected:
     void SetUp() override {}
 
@@ -104,6 +104,7 @@ TEST_F(ImpactDetectionTests, TestImpactsDetection) {
             std::string folder = entry.path().filename().string();
             if (folder != "TODO" && folder.find("WIP") == std::string::npos && folder == "10") {
                 SCOPED_TRACE("Testing folder: " + folder);
+                subvision::log("Testing folder: " + folder);
                 runImpactsTest(folder);
                 pictureCount++;
             }

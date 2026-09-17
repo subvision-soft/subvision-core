@@ -88,8 +88,10 @@ targetCoordinatesToSheetCoordinates(const std::map<int, Ellipse> &ellipses);
  *
  * @param coordinates Map of zone ID → Ellipse in sheet-global coordinates.
  * @param sheetMat    The sheet image to draw on (modified in place).
+ * @param federation  The federation to which the targets belong.
+ * @param eventType   The type of event for which the targets are being drawn.
  */
-void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat);
+void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat, Federation federation, Event eventType);
 
 /**
  * @brief Draw the detected sheet boundary on the image.
