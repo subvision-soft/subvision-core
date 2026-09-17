@@ -41,7 +41,7 @@ protected:
                 cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, subvision::PICTURE_HEIGHT_SHEET_DETECTION),
                 cv::Point2f(0, subvision::PICTURE_HEIGHT_SHEET_DETECTION)
                 };
-            subvision::retrieveImpacts(image, impactsResults, std::vector<cv::Point2f>());
+            subvision::retrieveImpacts(image, impactsResults, std::vector<cv::Point2f>(), subvision::Federation::FFESSM, subvision::Event::PRECISION);
 
             cv::Mat blackMat = cv::Mat::zeros(subvision::PICTURE_HEIGHT_SHEET_DETECTION,
                                               subvision::PICTURE_WIDTH_SHEET_DETECTION, CV_8UC1);
