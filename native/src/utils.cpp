@@ -1,10 +1,11 @@
-#include "utils.h"
-#include "constants.h"
-#include "logging.h"
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <ranges>
 
+#include "utils.h"
+#include "constants.h"
+#include "logging.h"
 namespace subvision {
     float toRadians(const float angle) {
         constexpr float degToRad = static_cast<float>(CV_PI) / 180.0f;

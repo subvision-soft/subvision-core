@@ -2,6 +2,7 @@
 
 #include <future>
 #include <vector>
+#include <ranges>
 
 #include "constants.h"
 #include "logging.h"
@@ -166,7 +167,8 @@ namespace subvision {
         return newEllipses;
     }
 
-    void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat, const Federation federation, const Event eventType) {
+    void drawTargets(const std::map<int, Ellipse> &coordinates, cv::Mat &sheetMat, const Federation federation,
+                     const Event eventType) {
         log("drawTargets");
         constexpr int drawingWidth = 1;
         const cv::Scalar targetColor(0, 0, 255);
@@ -192,7 +194,8 @@ namespace subvision {
                 const cv::Point centerEllipse = tupleIntCast(std::get<0>(area_ellipse));
                 const cv::Size2f sizeEllipse = std::get<1>(area_ellipse);
                 const float angleEllipse = std::get<2>(area_ellipse);
-                ellipse(sheetMat, centerEllipse, cv::Size2f(sizeEllipse.width * 0.5f, sizeEllipse.height * 0.5f), angleEllipse,
+                ellipse(sheetMat, centerEllipse, cv::Size2f(sizeEllipse.width * 0.5f, sizeEllipse.height * 0.5f),
+                        angleEllipse,
                         0, 360, targetColor, drawingWidth);
             }
         }
