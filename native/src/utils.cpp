@@ -179,12 +179,10 @@ namespace subvision {
     }
 
     std::vector<cv::Point> cleanupEllipticalContour(const std::vector<cv::Point> &contour) {
-        // cv::fitEllipse nécessite au moins 5 points
         if (contour.size() < 5) {
             return contour;
         }
 
-        // 1. Ajustement de l'ellipse théorique sur l'ensemble du contour
         const cv::RotatedRect ellipse = cv::fitEllipse(contour);
 
         const double ecx = ellipse.center.x;
