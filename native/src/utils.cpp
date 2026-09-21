@@ -178,73 +178,45 @@ namespace subvision {
         return {};
     }
 
-    static void fillShortestPath(std::vector<bool> &arr) {
-        std::vector<size_t> true_indices;
-
-        for (size_t i = 0; i < arr.size(); ++i) {
-            if (arr[i])
-                true_indices.push_back(i);
-        }
-
-        if (true_indices.empty())
-            return;
-
-        const size_t first_idx = true_indices.front();
-        const size_t last_idx = true_indices.back();
-
-        if (const size_t distance = last_idx - first_idx; distance > arr.size() / 2) {
-            for (size_t i = last_idx; i < arr.size(); ++i)
-                arr[i] = true;
-
-            for (size_t i = 0; i <= first_idx; ++i)
-                arr[i] = true;
-
-            for (size_t i = first_idx + 1; i < last_idx; ++i)
-                arr[i] = false;
-        } else {
-            for (size_t i = first_idx; i <= last_idx; ++i)
-                arr[i] = true;
-        }
-    }
     std::vector<cv::Point> cleanupEllipticalContour(const std::vector<cv::Point> &contour) {
-        const cv::Moments M = cv::moments(contour);
-
-
-        const double cx = M.m10 / M.m00;
-        const double cy = M.m01 / M.m00;
-
-
-        const size_t n = contour.size();
-
-        std::vector<double> distances(n);
-
-        for (size_t i = 0; i < n; ++i)
-        {
-            const double dx = contour[i].x - cx;
-            const double dy = contour[i].y - cy;
-
-            distances[i] = std::sqrt(dx * dx + dy * dy);
+        // cv::fitEllipse nécessite au moins 5 points
+        if (contour.size() < 5) {
+            return contour;
         }
 
-        std::vector bad_jumps(n - 1, false);
+        // 1. Ajustement de l'ellipse théorique sur l'ensemble du contour
+        const cv::RotatedRect ellipse = cv::fitEllipse(contour);
 
-        for (size_t i = 0; i < n - 1; ++i)
-        {
-            const double diff = std::abs(distances[i + 1] - distances[i]);
+        const double ecx = ellipse.center.x;
+        const double ecy = ellipse.center.y;
+        const double a = ellipse.size.width / 2.0;
+        const double b = ellipse.size.height / 2.0;
+        const double angle_rad = ellipse.angle * CV_PI / 180.0;
 
-            bad_jumps[i] = diff > JUMP_THRESHOLD;
-        }
-        fillShortestPath(bad_jumps);
-
+        constexpr double THRESHOLD_PIXELS = PICTURE_HEIGHT_SHEET_DETECTION + PICTURE_WIDTH_SHEET_DETECTION / 500.0;
 
         std::vector<cv::Point> cleaned_contour;
-        for (size_t i = 0; i < contour.size() - 1; ++i)
-        {
-            if (!bad_jumps[i])
-            {
-                cleaned_contour.push_back(contour[i]);
+        cleaned_contour.reserve(contour.size());
+
+        for (const auto &pt : contour) {
+            const double dx = pt.x - ecx;
+            const double dy = pt.y - ecy;
+            const double distance = std::sqrt(dx * dx + dy * dy);
+
+            const double angle_pt = std::atan2(dy, dx);
+            const double theta_local = angle_pt - angle_rad;
+
+            const double cos_t = std::cos(theta_local);
+            const double sin_t = std::sin(theta_local);
+            const double expected_distance = (a * b) / std::sqrt((b * cos_t) * (b * cos_t) + (a * sin_t) * (a * sin_t));
+
+            const double deviation = expected_distance - distance;
+
+            if (deviation <= THRESHOLD_PIXELS) {
+                cleaned_contour.push_back(pt);
             }
         }
+
         return cleaned_contour;
     }
 
