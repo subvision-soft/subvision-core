@@ -252,7 +252,7 @@ namespace SubvisionNET {
     static ImpactResults ^
         ProcessTargetImage(array<unsigned char> ^ imageData, int width,
                            int height, List<Point2f ^> ^ coordinates,
-                           Federation federation = Federation::UNKNOWN, Event eventType = Event::UNKNOWN
+                           Federation federation, Event eventType
                            ) {
           if (imageData == nullptr || width <= 0 || height <= 0)
             return nullptr;
