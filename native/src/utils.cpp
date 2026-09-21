@@ -1,6 +1,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <ranges>
+
 #include "utils.h"
 #include "constants.h"
 #include "logging.h"
