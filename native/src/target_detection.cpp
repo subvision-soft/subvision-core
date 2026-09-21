@@ -2,7 +2,6 @@
 
 #include <future>
 #include <vector>
-#include <ranges>
 
 #include "constants.h"
 #include "logging.h"
@@ -180,7 +179,8 @@ namespace subvision {
                 break;
             }
         }
-        for (const auto &ellipseContrat: coordinates | std::views::values) {
+        for (const auto &entry: coordinates) {
+            const auto &ellipseContrat = entry.second;
             const cv::Point center = tupleIntCast(std::get<0>(ellipseContrat));
             const cv::Size2f size = std::get<1>(ellipseContrat);
             const float angle = std::get<2>(ellipseContrat);

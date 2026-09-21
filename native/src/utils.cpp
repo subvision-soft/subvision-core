@@ -1,7 +1,6 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <ranges>
 
 #include "utils.h"
 #include "constants.h"
@@ -100,7 +99,7 @@ namespace subvision {
         }
         const int max_score = specs.targetSpecs.maxScore;
         int score_to_subtract = 0;
-        for (const int i: std::views::iota(0, distance)) {
+        for (int i = 0; i < distance; ++i) {
             for (const auto &area: areas) {
                 if (i <= area.radius) {
                     score_to_subtract += area.increment;
