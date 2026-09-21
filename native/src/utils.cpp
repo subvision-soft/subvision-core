@@ -5,6 +5,13 @@
 #include "utils.h"
 #include "constants.h"
 #include "logging.h"
+#include "logo_data.h"
+
+
+#ifndef LIB_VERSION
+#define LIB_VERSION "DEV"
+#endif
+
 namespace subvision {
     float toRadians(const float angle) {
         constexpr float degToRad = static_cast<float>(CV_PI) / 180.0f;
@@ -74,7 +81,7 @@ namespace subvision {
         return cvRound(millimeterDistance);
     }
 
-     TargetSheetSpecs getTargetSheetSpecs(const Federation federation, const Event event) {
+    TargetSheetSpecs getTargetSheetSpecs(const Federation federation, const Event event) {
         for (const auto &specs: TARGET_SHEET_SPECS) {
             if (specs.federation == federation) {
                 for (const auto &evt: specs.event) {
@@ -88,22 +95,25 @@ namespace subvision {
     }
 
     int getScore(const int distance, const Federation federation, const Event eventType) {
-
         const TargetSheetSpecs specs = getTargetSheetSpecs(federation, eventType);
 
 
         const std::list<AreaSpecs> areas = specs.targetSpecs.areas;
 
-        if (const int maximumImpactDistance =  areas.back().radius; distance > maximumImpactDistance) {
+        if (const int maximumImpactDistance = areas.back().radius; distance > maximumImpactDistance) {
             return 0;
         }
         const int max_score = specs.targetSpecs.maxScore;
         int score_to_subtract = 0;
         for (int i = 0; i < distance; ++i) {
+            std::optional<AreaSpecs> area_to_substract_from;
             for (const auto &area: areas) {
-                if (i <= area.radius) {
-                    score_to_subtract += area.increment;
+                if (i > area.radius) {
+                    area_to_substract_from = area;
                 }
+            }
+            if (area_to_substract_from.has_value()) {
+                score_to_subtract += area_to_substract_from.value().increment;
             }
         }
         return max_score - score_to_subtract;
@@ -195,7 +205,7 @@ namespace subvision {
         std::vector<cv::Point> cleaned_contour;
         cleaned_contour.reserve(contour.size());
 
-        for (const auto &pt : contour) {
+        for (const auto &pt: contour) {
             const double dx = pt.x - ecx;
             const double dy = pt.y - ecy;
             const double distance = std::sqrt(dx * dx + dy * dy);
@@ -217,4 +227,74 @@ namespace subvision {
         return cleaned_contour;
     }
 
+    static cv::Mat loadLogo() {
+        const cv::Mat data(
+            1,
+            logo_data_size,
+            CV_8UC1,
+            const_cast<unsigned char *>(logo_data)
+        );
+
+        return cv::imdecode(data, cv::IMREAD_UNCHANGED);
+    }
+
+    void drawVersion(cv::Mat &img) {
+        cv::Mat logo = loadLogo();
+
+        if (logo.empty())
+            return;
+
+        const std::string version = LIB_VERSION;
+
+        constexpr int fontFace = cv::FONT_HERSHEY_PLAIN;
+        constexpr double fontScale = 1.5;
+        constexpr int thickness = 2;
+        const cv::Scalar color(85, 35, 52);
+
+        const std::string text = "- " + version;
+
+        int textBaseline = 0;
+        cv::Size textSize = cv::getTextSize(
+            text,
+            fontFace,
+            fontScale,
+            thickness,
+            &textBaseline
+        );
+
+        const int newLogoHeight = textSize.height * 4;
+        const int newLogoWidth =
+                static_cast<int>(
+                    static_cast<double>(logo.cols) * newLogoHeight / logo.rows
+                );
+
+        cv::resize(
+            logo,
+            logo,
+            cv::Size(newLogoWidth, newLogoHeight)
+        );
+
+        constexpr int margin = 20;
+        const int gap = newLogoWidth / 20;
+
+        constexpr int x = margin;
+        const int y = img.rows - margin - newLogoHeight;
+
+        logo.copyTo(
+            img(cv::Rect(x, y, newLogoWidth, newLogoHeight))
+        );
+
+        const int textX = x + newLogoWidth + gap;
+        const int textY = y + (newLogoHeight + textSize.height) / 2;
+
+        cv::putText(
+            img,
+            text,
+            cv::Point(textX, textY),
+            fontFace,
+            fontScale,
+            color,
+            thickness
+        );
+    }
 }

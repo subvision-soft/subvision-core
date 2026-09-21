@@ -172,12 +172,16 @@ namespace subvision {
         constexpr int drawingWidth = 1;
         const cv::Scalar targetColor(0, 0, 255);
         const TargetSheetSpecs specs = getTargetSheetSpecs(federation, eventType);
-        int main_area_radius;
+        int main_area_radius = 0;
         for (const auto &area: specs.targetSpecs.areas) {
             if (area.main) {
                 main_area_radius = area.radius;
                 break;
             }
+        }
+        if (main_area_radius == 0) {
+            log("No main area found");
+            return;
         }
         for (const auto &entry: coordinates) {
             const auto &ellipseContrat = entry.second;
@@ -189,7 +193,8 @@ namespace subvision {
                     drawingWidth);
             std::vector<float> ratios;
             for (const auto &area: specs.targetSpecs.areas) {
-                float ratio = static_cast<float>(area.radius) / static_cast<float>(main_area_radius);
+                if (!area.ring) continue;
+                const float ratio = static_cast<float>(area.radius) / static_cast<float>(main_area_radius);
                 const Ellipse area_ellipse = growEllipse(ellipseContrat, ratio);
                 const cv::Point centerEllipse = tupleIntCast(std::get<0>(area_ellipse));
                 const cv::Size2f sizeEllipse = std::get<1>(area_ellipse);

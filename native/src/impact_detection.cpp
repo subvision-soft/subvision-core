@@ -104,6 +104,7 @@ namespace subvision {
 
             // Draw impacts and get points
             const std::vector<Impact> points = drawAndGetImpactsPoints(impactsCoordinates, sheetMat, targetsEllipsis, federation, eventType);
+            drawVersion(sheetMat);
 
             // Set results
             results.annotatedImage = sheetMat;

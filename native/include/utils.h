@@ -217,6 +217,16 @@ namespace subvision {
      */
     TargetSheetSpecs getTargetSheetSpecs(Federation federation, Event event);
 
+    /**
+     * @brief Draw the Subvision version string on an image.
+     *
+     * Overlays the current Subvision version in the bottom-left corner
+     * of the provided image for debugging and traceability.
+     *
+     * @param img The image on which to draw the version string.
+     */
+    void drawVersion(cv::Mat& img);
+
 } // namespace subvision
 
 #endif // SUBVISION_CORE_UTILS_H

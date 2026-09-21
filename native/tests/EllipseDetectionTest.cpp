@@ -72,6 +72,7 @@ protected:
             cv::imwrite((debugDir / "ellipse_mask_detected.png").string(), blackMat);
             cv::imwrite((debugDir / "ellipse_xor.png").string(), xorMat);
             cv::imwrite((debugDir / "ellipse_input.png").string(), img);
+            cv::imwrite((debugDir / "result_sheet_mat.png").string(), impactsResults.annotatedImage);
 
             ASSERT_GE(similarity, 0.995) << "Ellipses detection failed for folder " << folder << ", similarity: " << similarity;
         } catch (cv::Exception &e) {
