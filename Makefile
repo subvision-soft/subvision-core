@@ -16,7 +16,7 @@ LIB_SOURCES = native/src/utils.cpp \
 
 # Options de compilation emscripten
 EMCC_FLAGS = -O3 -std=c++20 \
-            -DLIB_VERSION=\"$(LIB_VERSION)\" \
+            -DLIB_VERSION='$(LIB_VERSION)' \
 			-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s USE_ZLIB=1 \
 			-s MODULARIZE=1 -s ENVIRONMENT=web,worker \
 			-s DISABLE_EXCEPTION_CATCHING=0 -s SINGLE_FILE \
