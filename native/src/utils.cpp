@@ -227,74 +227,142 @@ namespace subvision {
         return cleaned_contour;
     }
 
-    static cv::Mat loadLogo() {
-        const cv::Mat data(
-            1,
-            logo_data_size,
-            CV_8UC1,
+
+
+    void drawVersion(cv::Mat &img) {
+        if (img.empty())
+            return;
+        constexpr int font = cv::FONT_HERSHEY_PLAIN;
+        constexpr double fontScale = 1.0;
+        constexpr int thickness = 1;
+
+        const cv::Scalar color(85, 35, 52);
+
+        const std::string versionText =
+                std::string("- ") + LIB_VERSION;
+
+        // ------------------------------------------------------------
+        // Calculate text size
+        // ------------------------------------------------------------
+
+        int baseline = 0;
+
+        const cv::Size textSize = cv::getTextSize(
+            versionText,
+            font,
+            fontScale,
+            thickness,
+            &baseline
+        );
+
+        const cv::Mat logo(
+            logo_height,
+            logo_width,
+            CV_8UC4,
             const_cast<unsigned char *>(logo_data)
         );
 
-        return cv::imdecode(data, cv::IMREAD_UNCHANGED);
-    }
-
-    void drawVersion(cv::Mat &img) {
-        cv::Mat logo = loadLogo();
-
         if (logo.empty())
             return;
-
-        const std::string version = LIB_VERSION;
-
-        constexpr int fontFace = cv::FONT_HERSHEY_PLAIN;
-        constexpr double fontScale = 1.5;
-        constexpr int thickness = 2;
-        const cv::Scalar color(85, 35, 52);
-
-        const std::string text = "- " + version;
-
-        int textBaseline = 0;
-        cv::Size textSize = cv::getTextSize(
-            text,
-            fontFace,
-            fontScale,
-            thickness,
-            &textBaseline
-        );
-
         const int newLogoHeight = textSize.height * 4;
+
         const int newLogoWidth =
                 static_cast<int>(
-                    static_cast<double>(logo.cols) * newLogoHeight / logo.rows
+                    static_cast<double>(logo.cols) *
+                    static_cast<double>(newLogoHeight) /
+                    static_cast<double>(logo.rows)
                 );
+
+        cv::Mat resizedLogo;
 
         cv::resize(
             logo,
-            logo,
-            cv::Size(newLogoWidth, newLogoHeight)
+            resizedLogo,
+            cv::Size(newLogoWidth, newLogoHeight),
+            0.0,
+            0.0,
+            cv::INTER_AREA
         );
 
         constexpr int margin = 20;
-        const int gap = newLogoWidth / 20;
+
+        const int gap = std::max(5, newLogoWidth / 20);
+
+        const int totalWidth =
+                newLogoWidth +
+                gap +
+                textSize.width;
+
+        if (margin + totalWidth > img.cols)
+            return;
 
         constexpr int x = margin;
-        const int y = img.rows - margin - newLogoHeight;
 
-        logo.copyTo(
-            img(cv::Rect(x, y, newLogoWidth, newLogoHeight))
-        );
+        const int y =
+                img.rows -
+                margin -
+                newLogoHeight;
 
-        const int textX = x + newLogoWidth + gap;
-        const int textY = y + (newLogoHeight + textSize.height) / 2;
+        if (y < 0)
+            return;
+
+        for (int row = 0; row < resizedLogo.rows; ++row) {
+            const cv::Vec4b *logoRow =
+                    resizedLogo.ptr<cv::Vec4b>(row);
+
+            auto *imageRow =
+                    img.ptr<cv::Vec3b>(y + row);
+
+            for (int col = 0; col < resizedLogo.cols; ++col) {
+                const cv::Vec4b &pixel =
+                        logoRow[col];
+
+                const uchar alpha = pixel[3];
+
+                if (alpha == 0)
+                    continue;
+
+                const float a =
+                        static_cast<float>(alpha) / 255.0f;
+
+                cv::Vec3b &dst =
+                        imageRow[x + col];
+
+                dst[0] = static_cast<uchar>(
+                    pixel[0] * a +
+                    dst[0] * (1.0f - a)
+                );
+
+                dst[1] = static_cast<uchar>(
+                    pixel[1] * a +
+                    dst[1] * (1.0f - a)
+                );
+
+                dst[2] = static_cast<uchar>(
+                    pixel[2] * a +
+                    dst[2] * (1.0f - a)
+                );
+            }
+        }
+
+        const int textX =
+                x +
+                newLogoWidth +
+                gap;
+
+        const int textY =
+                y +
+                (newLogoHeight + textSize.height) / 2;
 
         cv::putText(
             img,
-            text,
+            versionText,
             cv::Point(textX, textY),
-            fontFace,
+            font,
             fontScale,
             color,
-            thickness
+            thickness,
+            cv::LINE_AA
         );
     }
 }

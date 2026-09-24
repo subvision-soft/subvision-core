@@ -113,7 +113,6 @@ namespace subvision {
             log(e.what());
             return false;
         }
-
         return true;
     }
 }
