@@ -47,7 +47,7 @@ jobs:
           ctest --test-dir build --output-on-failure
 
   build-wasm:
-    #    needs: test
+    needs: [get-version]
     runs-on: ubuntu-latest
     permissions:
       contents: write
