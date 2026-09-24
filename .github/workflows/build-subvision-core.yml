@@ -56,7 +56,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build subvision.js & subvision.mjs
-        run: make all LIB_VERSION=${{ needs.get-version.outputs.version }}
+        run: make all LIB_VERSION="${{ needs.get-version.outputs.version }}"
 
       - name: Upload WASM artifacts
         uses: actions/upload-artifact@v4
