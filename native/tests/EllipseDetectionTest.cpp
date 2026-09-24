@@ -26,6 +26,7 @@ protected:
         std::string imgPath = TESTS_RESOURCES_PATH + "/" + folder + "/cropped_sheet.jpg";
         std::string imagePath = TESTS_RESOURCES_PATH + "/" + folder + "/image.jpg";
         std::string expectedMaskPath = TESTS_RESOURCES_PATH + "/" + folder + "/expected_visuals.jpg";
+        std::string expectedSheetPath = TESTS_RESOURCES_PATH + "/" + folder + "/expected_sheet.jpg";
         try {
             cv::Mat img = cv::imread(imgPath);
             cv::Mat image = cv::imread(imagePath);
@@ -36,12 +37,9 @@ protected:
                     subvision::targetCoordinatesToSheetCoordinates(ellipses);
 
             subvision::ImpactResults impactsResults = subvision::ImpactResults();
-            std::vector<cv::Point2f> coordinates = // Top left, top right, bottom right and bottom left corners
-                std::vector<cv::Point2f> {cv::Point2f(0, 0), cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, 0),
-                cv::Point2f(subvision::PICTURE_WIDTH_SHEET_DETECTION, subvision::PICTURE_HEIGHT_SHEET_DETECTION),
-                cv::Point2f(0, subvision::PICTURE_HEIGHT_SHEET_DETECTION)
-                };
-            subvision::retrieveImpacts(image, impactsResults, std::vector<cv::Point2f>());
+
+            std::vector<cv::Point2f> coordinates = subvision::getSheetCoordinates(cv::imread(expectedSheetPath));
+            subvision::retrieveImpacts(image, impactsResults, coordinates, subvision::Federation::FFESSM, subvision::Event::PRECISION);
 
             cv::Mat blackMat = cv::Mat::zeros(subvision::PICTURE_HEIGHT_SHEET_DETECTION,
                                               subvision::PICTURE_WIDTH_SHEET_DETECTION, CV_8UC1);
@@ -72,6 +70,7 @@ protected:
             cv::imwrite((debugDir / "ellipse_mask_detected.png").string(), blackMat);
             cv::imwrite((debugDir / "ellipse_xor.png").string(), xorMat);
             cv::imwrite((debugDir / "ellipse_input.png").string(), img);
+            cv::imwrite((debugDir / "result_sheet_mat.png").string(), impactsResults.annotatedImage);
 
             ASSERT_GE(similarity, 0.995) << "Ellipses detection failed for folder " << folder << ", similarity: " << similarity;
         } catch (cv::Exception &e) {

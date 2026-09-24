@@ -116,16 +116,13 @@ namespace subvision {
     /**
      * @brief Compute the score for a given distance from center.
      *
-     * Scoring rules (underwater target shooting federation scale):
-     * - Distance > 48 mm: score = 0
-     * - Distance <= 0 mm (bullseye): score = 570
-     * - Distance 1–5 mm: score = 570 − (distance × 6)
-     * - Distance > 5 mm: score = 540 − ((distance − 5) × 3)
-     *
+     * Applies the appropriate scoring rules based on the federation and event type.
      * @param distance Distance from center in millimeters.
-     * @return Score value (0–570).
+     * @param federation Federation scoring rules to apply.
+     * @param eventType Event type (precision, biathlon, etc.) for scoring.
+     * @return Score value.
      */
-    int getScore(int distance);
+    int getScore(int distance, Federation federation, Event eventType);
 
     /**
      * @brief Clamp a float value between a minimum and maximum.
@@ -206,6 +203,30 @@ namespace subvision {
      * @return The cleaned-up contour.
      */
     std::vector<cv::Point> cleanupEllipticalContour(const std::vector<cv::Point> &contour);
+
+
+    /**
+     * @brief Get the target sheet specifications based on federation and event type.
+     *
+     * Returns the expected target dimensions, scoring rules, and other
+     * specifications for the given federation and event.
+     *
+     * @param federation The federation (e.g., CMAS, FFESSM).
+     * @param event      The event type (e.g., precision, biathlon).
+     * @return TargetSheetSpecs structure containing relevant specifications.
+     */
+    TargetSheetSpecs getTargetSheetSpecs(Federation federation, Event event);
+
+    /**
+     * @brief Draw the Subvision version string on an image.
+     *
+     * Overlays the current Subvision version in the bottom-left corner
+     * of the provided image for debugging and traceability.
+     *
+     * @param img The image on which to draw the version string.
+     */
+    void drawVersion(cv::Mat& img);
+
 } // namespace subvision
 
 #endif // SUBVISION_CORE_UTILS_H

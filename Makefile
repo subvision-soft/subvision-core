@@ -4,6 +4,7 @@
 DOCKER_IMAGE = ghcr.io/subvision-soft/subvision-emscripten:2025.6.1
 OUTPUT_DIR = build_wasm
 SRC_DIR = .
+LIB_VERSION ?= "DEV"
 
 # Sources pour la bibliothèque statique
 LIB_SOURCES = native/src/utils.cpp \
@@ -14,7 +15,9 @@ LIB_SOURCES = native/src/utils.cpp \
 			native/src/logging.cpp
 
 # Options de compilation emscripten
-EMCC_FLAGS = -O3 -std=c++20 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s USE_ZLIB=1 \
+EMCC_FLAGS = -O3 -std=c++20 \
+            -DLIB_VERSION=\\\"$(LIB_VERSION)\\\" \
+			-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s USE_ZLIB=1 \
 			-s MODULARIZE=1 -s ENVIRONMENT=web,worker \
 			-s DISABLE_EXCEPTION_CATCHING=0 -s SINGLE_FILE \
 			-s USE_ES6_IMPORT_META=0 -s NO_EXIT_RUNTIME=1 \

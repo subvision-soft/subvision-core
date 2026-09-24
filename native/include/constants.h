@@ -32,9 +32,9 @@ const int SUBVISION_ZONE_UNDEFINED = -1;   ///< Undefined or unresolved zone.
  *  are performed relative to these dimensions.
  *  @{
  */
-const int PICTURE_WIDTH_SHEET_DETECTION =
+constexpr int PICTURE_WIDTH_SHEET_DETECTION =
     2000; ///< Standard processing width in pixels.
-const int PICTURE_HEIGHT_SHEET_DETECTION =
+constexpr int PICTURE_HEIGHT_SHEET_DETECTION =
     2000; ///< Standard processing height in pixels.
 /** @} */
 
